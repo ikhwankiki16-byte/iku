@@ -5,201 +5,56 @@
   <link rel="stylesheet" href="style.css">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050505">
   <title>iku's fragments</title>
-  
   <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background-color: #050505;
-      color: white;
-      /* Background fragments will use typewriter font */
-      font-family: 'Courier New', Courier, monospace;
-      height: 100vh;
-      width: 100vw;
-    }
-    #void { position: relative; width: 100%; height: 100%; z-index: 1; }
-    .fragment {
-      position: absolute;
-      white-space: nowrap;
-      pointer-events: none;
-      transition: transform 0.1s ease-out;
-      user-select: none;
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.6);
-    }
-    .ui-layer {
-      position: absolute;
-      top: 30px;
-      left: 30px;
-      pointer-events: none;
-      z-index: 10;
-    }
-    h1 { font-weight: 300; letter-spacing: 6px; font-size: 1.2rem; margin: 0; opacity: 0.5; }
-    p { font-size: 0.7rem; letter-spacing: 2px; opacity: 0.3; }
-    
-    #bottomControls {
-      position: fixed;
-      bottom: 24px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      z-index: 1000;
-    }
-
-    .icon-btn {
-      background: white;
-      color: black;
-      border: none;
-      border-radius: 50px;
-      font-weight: bold;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      height: 48px;
-      padding: 0 24px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-      
-      /* --- CONSISTENCY FIXES --- */
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      font-size: 0.9rem; 
-      letter-spacing: normal; 
-      transition: transform 0.2s;
-    }
-
-    .icon-btn:hover {
-      transform: scale(1.05);
-    }
+    body { font-family: 'Courier New', monospace; overflow: hidden; }
+    #void { position: fixed; inset: 0; z-index: 0; }
+    .fragment { position: absolute; white-space: nowrap; pointer-events: none; color: rgba(255,255,255,0.6); z-index: 1; }
+    .ui-layer { position: absolute; top: 30px; left: 30px; z-index: 10; opacity: 0.5; }
+    #bottomControls { bottom: 24px; display: flex; justify-content: center; }
+    .icon-btn { font-family: Arial, sans-serif; } /* Keep button font clean */
   </style>
 </head>
-<body>
-
-  <div class="ui-layer">
-    <h1>FRAGMENTS</h1>
-    <p>move cursor to hear the echoes.</p>
-  </div>
-
+<body class="mood-night">
+  <div class="ui-layer"><h1>FRAGMENTS</h1></div>
   <div id="void"></div>
-
   <div id="bottomControls">
-    <a class="icon-btn" href="index.html">🏠 HOME</a>
+    <a class="icon-btn" href="index.html">🐜 HOME</a>
   </div>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g",
-      databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "iku-website-iku",
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const container = document.getElementById('void');
-    let fragments = [];
-
-    // --- AUDIO SYSTEM ---
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx;
-
-    function initAudio() {
-      if (!audioCtx) audioCtx = new AudioContext();
-    }
-
+    const firebaseConfig = { apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g", databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "iku-website-iku" };
+    const app = initializeApp(firebaseConfig); const db = getDatabase(app);
+    const container = document.getElementById('void'); let fragments = []; let audioCtx;
     function playChime(freq) {
-      if (!audioCtx) return;
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
-
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-
-      gain.gain.setValueAtTime(0, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.02);
+      const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+      osc.type = 'sine'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.5);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start();
-      osc.stop(audioCtx.currentTime + 1.5);
+      osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 1.5);
     }
-
-    // --- DATABASE & FRAGMENTS ---
-    onValue(ref(db, 'entries'), (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        let allWords = [];
-        Object.values(data).forEach(entry => {
-          const words = entry.text.split(/\s+/);
-          allWords = allWords.concat(words);
-        });
-        setupFragments(allWords);
+    onValue(ref(db, 'entries'), (s) => {
+      const data = s.val(); if (data) {
+        let words = []; Object.values(data).forEach(e => words = words.concat(e.text.split(/\s+/)));
+        container.innerHTML = ''; fragments = [];
+        for (let i = 0; i < Math.min(words.length, 40); i++) {
+          const div = document.createElement('div'); div.className = 'fragment';
+          div.textContent = words[Math.floor(Math.random() * words.length)];
+          const f = { el: div, x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3, lastP: 0 };
+          fragments.push(f); container.appendChild(div);
+        }
       }
     });
-
-    function setupFragments(wordList) {
-      container.innerHTML = '';
-      fragments = [];
-      const limit = Math.min(wordList.length, 40);
-      
-      for (let i = 0; i < limit; i++) {
-        const div = document.createElement('div');
-        div.className = 'fragment';
-        div.textContent = wordList[Math.floor(Math.random() * wordList.length)];
-        const x = Math.random() * window.innerWidth;
-        const y = Math.random() * window.innerHeight;
-        
-        fragments.push({
-          el: div,
-          x: x, y: y,
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: (Math.random() - 0.5) * 0.3,
-          lastPlayed: 0
-        });
-        container.appendChild(div);
-      }
-    }
-
-    let mouseX = -1000; let mouseY = -1000;
-    window.addEventListener('mousemove', (e) => {
-      initAudio(); 
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-    });
-
+    let mx = -1000, my = -1000; window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
     function animate() {
       fragments.forEach(f => {
-        f.x += f.vx; f.y += f.vy;
-
-        const dx = mouseX - f.x;
-        const dy = mouseY - f.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        
-        if (dist < 120) {
-          const force = (120 - dist) / 120;
-          f.x -= dx * force * 0.1;
-          f.y -= dy * force * 0.1;
-
-          const now = Date.now();
-          if (now - f.lastPlayed > 1000) {
-            const freq = 200 + (window.innerHeight - f.y) * 0.8;
-            playChime(freq);
-            f.lastPlayed = now;
-          }
-        }
-
-        if (f.x < -150) f.x = window.innerWidth + 50;
-        if (f.x > window.innerWidth + 150) f.x = -50;
-        if (f.y < -50) f.y = window.innerHeight + 50;
-        if (f.y > window.innerHeight + 50) f.y = -50;
-
+        f.x += f.vx; f.y += f.vy; const dx = mx - f.x, dy = my - f.y, dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 120) { f.x -= dx * 0.05; f.y -= dy * 0.05; if (Date.now() - f.lastP > 1000) { playChime(200 + (window.innerHeight - f.y) * 0.8); f.lastP = Date.now(); } }
+        if (f.x < -100) f.x = window.innerWidth; if (f.x > window.innerWidth) f.x = -100;
         f.el.style.transform = `translate(${f.x}px, ${f.y}px)`;
       });
       requestAnimationFrame(animate);
