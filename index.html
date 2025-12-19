@@ -8,12 +8,74 @@
   <meta name="theme-color" content="#050505">
   <title>iku's world</title>
   <style>
+    /* CRITICAL: Fixes browser UI colors and prevents scrolling */
     html { background-color: #000000; }
-    body { overflow: hidden; position: fixed; width: 100%; height: 100%; }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden; 
+      position: fixed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: white;
+      /* Background is handled by style.css */
+    }
+
     h1 { font-weight: 300; letter-spacing: 4px; margin: 0; }
     .typewriter-container { min-height: 1.5em; margin: 10px 0 20px 0; }
-    img { max-width: 300px; width: 70%; height: auto; border-radius: 10px; margin-bottom: 60px; }
-    #bottomControls { position: fixed; bottom: 30px; left: 0; right: 0; display: flex; justify-content: center; gap: 12px; z-index: 1000; }
+    
+    img { 
+      max-width: 300px; 
+      width: 70%; 
+      height: auto; 
+      border-radius: 10px; 
+      margin-bottom: 80px; /* Space for the buttons at bottom */
+    }
+
+    /* Fixed Level alignment for all pages */
+    #bottomControls {
+      position: fixed; 
+      bottom: 30px; 
+      left: 0; 
+      right: 0;
+      display: flex; 
+      justify-content: center; 
+      gap: 12px; 
+      z-index: 1000;
+      padding: 0 16px;
+      box-sizing: border-box;
+    }
+
+    /* Exact same button dimensions as Fragments/Journal */
+    .icon-btn {
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 20px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      height: 48px;
+      width: 145px; /* Forced width to ensure consistency */
+      padding: 0; 
+      gap: 8px;
+      font-size: 0.9rem;
+      font-family: Arial, sans-serif;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: transform 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .icon-btn:active { transform: scale(0.95); }
+
     .cursor { font-weight: bold; animation: blink 1s step-end infinite; margin-left: 2px; }
     @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
   </style>
@@ -23,28 +85,43 @@
   <div class="typewriter-container">
     <p id="status-text"><span id="typewriter"></span><span class="cursor">|</span></p>
   </div>
+
   <img src="iku.svg" alt="iku">
+
   <div id="bottomControls">
-    <a class="icon-btn" href="fragments.html"><span>🐜</span><span>FRAGMENTS</span></a>
-    <a class="icon-btn" href="ikus-journal.html"><span>📖</span><span>JOURNAL</span></a>
+    <a class="icon-btn" href="fragments.html">
+      <span>🐜</span><span>FRAGMENTS</span>
+    </a>
+    <a class="icon-btn" href="ikus-journal.html">
+      <span>📖</span><span>JOURNAL</span>
+    </a>
   </div>
+
   <script>
     function updateAtmosphere() {
       const hour = new Date().getHours();
+      // Returns time-based text without changing backgrounds
       if (hour >= 6 && hour < 17) return "good morning. i'm leaving soon.";
       if (hour >= 17 && hour < 20) return "the sun is setting. i'm leaving soon.";
       return "it's late. i'm leaving soon.";
     }
+
     const textToType = updateAtmosphere();
     let i = 0;
     function typeWriter() {
       if (i < textToType.length) {
         document.getElementById('typewriter').innerHTML += textToType.charAt(i);
-        i++; setTimeout(typeWriter, 100);
+        i++; 
+        setTimeout(typeWriter, 100);
       }
     }
+
     window.onload = typeWriter;
-    document.addEventListener('touchmove', (e) => { if(e.touches.length <= 1) e.preventDefault(); }, { passive: false });
+
+    // Strict prevention of mobile scroll bounce
+    document.addEventListener('touchmove', (e) => {
+      if(e.touches.length <= 1) e.preventDefault();
+    }, { passive: false });
   </script>
 </body>
 </html>
