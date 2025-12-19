@@ -13,6 +13,7 @@
       overflow: hidden;
       background-color: #050505;
       color: white;
+      /* Background fragments will use typewriter font */
       font-family: 'Courier New', Courier, monospace;
       height: 100vh;
       width: 100vw;
@@ -36,6 +37,7 @@
     }
     h1 { font-weight: 300; letter-spacing: 6px; font-size: 1.2rem; margin: 0; opacity: 0.5; }
     p { font-size: 0.7rem; letter-spacing: 2px; opacity: 0.3; }
+    
     #bottomControls {
       position: fixed;
       bottom: 24px;
@@ -45,6 +47,7 @@
       justify-content: center;
       z-index: 1000;
     }
+
     .icon-btn {
       background: white;
       color: black;
@@ -57,8 +60,17 @@
       text-decoration: none;
       height: 48px;
       padding: 0 24px;
-      font-size: 0.8rem;
       box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+      
+      /* --- CONSISTENCY FIXES --- */
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 0.9rem; 
+      letter-spacing: normal; 
+      transition: transform 0.2s;
+    }
+
+    .icon-btn:hover {
+      transform: scale(1.05);
     }
   </style>
 </head>
@@ -157,7 +169,7 @@
 
     let mouseX = -1000; let mouseY = -1000;
     window.addEventListener('mousemove', (e) => {
-      initAudio(); // Initialize audio on first movement
+      initAudio(); 
       mouseX = e.clientX;
       mouseY = e.clientY;
     });
@@ -175,10 +187,8 @@
           f.x -= dx * force * 0.1;
           f.y -= dy * force * 0.1;
 
-          // Play sound if not played in the last 1 second for this fragment
           const now = Date.now();
           if (now - f.lastPlayed > 1000) {
-            // Note frequency based on vertical position (higher = higher pitch)
             const freq = 200 + (window.innerHeight - f.y) * 0.8;
             playChime(freq);
             f.lastPlayed = now;
