@@ -14,13 +14,12 @@ body {
   color: white;
   font-family: Arial, sans-serif;
 
-  /* White → Dark Blue gradient */
+  /* Black → dark blue gradient */
   background: radial-gradient(
     circle at center,
-    #ffffff 0%,
-    #6fa3d1 30%,
-    #0b1c2d 65%,
-    #02060c 100%
+    #0b1c2d 0%,
+    #05070a 60%,
+    #000000 100%
   );
 }
 
@@ -34,7 +33,6 @@ body::before {
   z-index: -1;
 }
 
-/* Keep content above grain */
 body > * { position: relative; z-index: 1; }
 
 /* Profile image styling */
@@ -62,6 +60,86 @@ body > * { position: relative; z-index: 1; }
 .journal-btn:focus{
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(255,255,255,0.06);
+  opacity: 0.98;
+}
+
+/* Images responsive */
+img { max-width: 100%; height: auto; }
+
+/* Journal page specific */
+.journal-container{
+  max-width: 720px;
+  width: 90%;
+  margin-top: 18px;
+  text-align: left;
+  padding-bottom: 120px;
+}
+.journal-container label{ display:block; margin-bottom:6px; }
+textarea#note{
+  width:100%;
+  box-sizing: border-box;
+  padding:8px;
+  border-radius: var(--box-radius);
+  border:1px solid #444;
+  background: #111;
+  color: #fff;
+}
+.journal-entry{
+  background: #111;
+  border: 1px solid #333;
+  padding: 10px;
+  border-radius: var(--box-radius);
+  margin-top: 12px;
+}
+.entry-date{ font-size: 0.85rem; color: #bbb; margin-bottom:6px; }
+.entry-content{ white-space: pre-wrap; }
+.entry-controls{ margin-top:8px; }
+.entry-delete{ background:#b00; color:#fff; padding:6px 10px; border-radius: var(--box-radius); border:none; cursor:pointer; }
+.muted{ color:#888; }
+
+/* Bottom controls */
+#bottomControls{
+  position: fixed;
+  bottom: 16px;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  z-index: 1000;
+  padding: 0 16px;
+}
+#bottomControls a, .icon-btn{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  min-width: 0;
+  height: 44px;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: var(--box-radius);
+  box-sizing: border-box;
+  background: white;
+  color: black;
+  text-decoration: none;
+}
+#inlineAdmin{ position: relative; display:flex; gap:8px; align-items:center; min-width:56px; justify-self: center; }
+#inlineAdmin > button{ padding:6px; display:inline-flex; align-items:center; justify-content:center; }
+#inlineAdmin > .lock-btn{ width:40px; height:40px; }
+#logoutInlineVisible{ padding:8px 12px; border-radius: var(--box-radius); min-width:50px; height:44px; margin-left:0; }
+#loginBoxInline{
+  display: none;
+  position: absolute;
+  bottom: 56px;
+  left: 0;
+  background: rgba(0,0,0,0.95);
+  padding: 6px;
+  border-radius: var(--box-radius);
+  border: 1px solid #333;
+}
+#loginBoxInline input{ width: 150px; }
+#loginBoxInline button{ margin-left: 4px; }  box-shadow: 0 8px 20px rgba(255,255,255,0.06);
   opacity: 0.98;
 }
 
