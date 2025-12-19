@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/svg" href="iku.svg">
+  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iku's fragments</title>
+  
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #050505;
+      color: white;
+      font-family: 'Courier New', Courier, monospace;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #void {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .fragment {
+      position: absolute;
+      white-space: nowrap;
+      pointer-events: none;
+      transition: transform 0.1s ease-out, opacity 0.5s;
+      user-select: none;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .ui-layer {
+      position: absolute;
+      top: 30px;
+      left: 30px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    h1 { font-weight: 300; letter-spacing: 6px; font-size: 1.2rem; margin: 0; opacity: 0.5; }
+    p { font-size: 0.7rem; letter-spacing: 2px; opacity: 0.3; }
+
+    #bottomControls {
+      position: fixed;
+      bottom: 24px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .icon-btn {
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 50px;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      height: 48px;
+      padding: 0 24px;
+      font-size: 0.8rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ui-layer">
+    <h1>FRAGMENTS</h1>
+    <p>scattered thoughts / move cursor to push away</p>
+  </div>
+
+  <div id="void"></div>
+
+  <div id="bottomControls">
+    <a class="icon-btn" href="index.html">🏠 HOME</a>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g",
+      databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "iku-website-iku",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const container = document.getElementById('void');
+    let fragments = [];
+
+    // Pull words from Firebase
+    onValue(ref(db, 'entries'), (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        let allWords = [];
+        Object.values(data).forEach(entry => {
+          const words = entry.text.split(/\s+/);
+          allWords = allWords.concat(words);
+        });
+        createFragments(allWords);
+      }
+    });
+
+    function createFragments(wordList) {
+      container.innerHTML = '';
+      fragments = [];
+      
+      // Limit to 50 words for performance
+      const limit = Math.min(wordList.length, 50);
+      
+      for (let i = 0; i < limit; i++) {
+        const div = document.createElement('div');
+        div.className = 'fragment';
+        div.textContent = wordList[Math.floor(Math.random() * wordList.length)];
+        
+        // Random starting positions
+        const x = Math.random() * window.innerWidth;
+        const y = Math.random() * window.innerHeight;
+        
+        const fragObj = {
+          el: div,
+          x: x,
+          y: y,
+          vx: (Math.random() - 0.5) * 0.5, // Natural drift speed
+          vy: (Math.random() - 0.5) * 0.5
+        };
+
+        container.appendChild(div);
+        fragments.push(fragObj);
+      }
+    }
+
+    // Interaction Logic
+    let mouseX = -1000;
+    let mouseY = -1000;
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    function animate() {
+      fragments.forEach(f => {
+        // Natural Drift
+        f.x += f.vx;
+        f.y += f.vy;
+
+        // Gravity Repulsion
+        const dx = mouseX - f.x;
+        const dy = mouseY - f.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < 150) {
+          const force = (150 - distance) / 150;
+          f.x -= dx * force * 0.1;
+          f.y -= dy * force * 0.1;
+        }
+
+        // Screen Wrap (Infinite Loop)
+        if (f.x < -100) f.x = window.innerWidth + 50;
+        if (f.x > window.innerWidth + 100) f.x = -50;
+        if (f.y < -50) f.y = window.innerHeight + 50;
+        if (f.y > window.innerHeight + 50) f.y = -50;
+
+        f.el.style.transform = `translate(${f.x}px, ${f.y}px)`;
+      });
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
