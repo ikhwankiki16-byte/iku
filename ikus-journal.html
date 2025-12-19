@@ -22,48 +22,69 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
     let isAdmin = false;
+    let lastData = null; // Store data to re-render when login status changes
 
+    // 1. AUTH WATCHER
     onAuthStateChanged(auth, (user) => {
+      const editor = document.getElementById('editorArea');
+      const logout = document.getElementById('logoutBtn');
+      const lock = document.getElementById('showLoginBtn');
+
       if (user) {
         isAdmin = true;
-        document.getElementById('editorArea').style.display = 'block';
-        document.getElementById('logoutBtn').style.display = 'inline-flex';
-        document.getElementById('showLoginBtn').style.display = 'none';
+        editor.style.display = 'block';
+        logout.style.display = 'inline-flex';
+        lock.style.display = 'none';
         document.getElementById('loginPopup').style.display = 'none';
       } else {
         isAdmin = false;
-        document.getElementById('editorArea').style.display = 'none';
-        document.getElementById('logoutBtn').style.display = 'none';
-        document.getElementById('showLoginBtn').style.display = 'inline-flex';
+        editor.style.display = 'none';
+        logout.style.display = 'none';
+        lock.style.display = 'inline-flex';
       }
+      // Re-render the entries so the Delete buttons appear/disappear
+      if(lastData) render(lastData);
     });
 
+    // 2. DATABASE SYNC
     onValue(ref(db, 'entries'), (snapshot) => {
-      render(snapshot.val());
+      lastData = snapshot.val();
+      render(lastData);
     });
 
+    // 3. THE RENDER FUNCTION (With Delete Button)
     function render(data) {
       const list = document.getElementById('entries');
       list.innerHTML = '';
       if (!data) { list.innerHTML = '<p class="muted">No entries yet.</p>'; return; }
+
       const entries = Object.keys(data).map(key => ({ id: key, ...data[key] }));
       entries.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach((e) => {
         const card = document.createElement('div');
         card.className = 'journal-entry';
-        card.innerHTML = `<div class="entry-date">${new Date(e.date).toLocaleString()}</div><div class="entry-content"></div>`;
+        card.innerHTML = `
+          <div class="entry-date">${new Date(e.date).toLocaleString()}</div>
+          <div class="entry-content"></div>
+        `;
         card.querySelector('.entry-content').textContent = e.text;
+
+        // --- THE DELETE BUTTON ---
         if (isAdmin) {
           const delBtn = document.createElement('button');
-          delBtn.textContent = 'Delete';
+          delBtn.textContent = 'Delete Entry';
           delBtn.className = 'entry-delete';
-          delBtn.style.marginTop = '10px';
-          delBtn.onclick = () => { if(confirm('Delete?')) remove(ref(db, `entries/${e.id}`)); };
+          delBtn.onclick = () => {
+            if(confirm('Permanently delete this entry?')) {
+              remove(ref(db, `entries/${e.id}`));
+            }
+          };
           card.appendChild(delBtn);
         }
         list.appendChild(card);
       });
     }
 
+    // 4. UI ACTIONS
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('saveBtn').onclick = () => {
         const ta = document.getElementById('note');
@@ -79,9 +100,11 @@
       };
 
       document.getElementById('performLoginBtn').onclick = async () => {
+        const email = document.getElementById('emailInput').value;
+        const pass = document.getElementById('passInput').value;
         try {
-          await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value);
-        } catch (e) { alert("Error: " + e.message); }
+          await signInWithEmailAndPassword(auth, email, pass);
+        } catch (e) { alert("Login failed. Check email/password."); }
       };
 
       document.getElementById('logoutBtn').onclick = () => signOut(auth);
@@ -89,79 +112,33 @@
   </script>
 
   <style>
-    /* Footer Layout */
-    #bottomControls {
-      position: fixed;
-      bottom: 24px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-      z-index: 1000;
-    }
-
-    /* Buttons */
-    .icon-btn, .lock-btn {
-      background: white;
-      color: black;
-      border: none;
-      border-radius: 50px;
-      font-weight: bold;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      cursor: pointer;
-      height: 48px;
-      box-sizing: border-box;
-    }
-
-    .icon-btn { padding: 0 20px; gap: 8px; }
-    .lock-btn { width: 48px; padding: 0; font-size: 18px; }
-
-    /* Login Popup Fixed */
-    #loginPopup {
-      position: absolute;
-      bottom: 70px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #111;
-      border: 1px solid #333;
-      padding: 16px;
-      border-radius: 20px;
-      width: 240px; /* Slightly wider for better spacing */
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      box-sizing: border-box; /* Crucial: ensures padding doesn't push width out */
-    }
-
-    #loginPopup input {
-      width: 100%;
-      padding: 12px;
-      background: #222;
-      border: 1px solid #444;
+    /* Styling the Delete Button so it's visible */
+    .entry-delete {
+      background: #ff4d4d;
       color: white;
-      border-radius: 10px;
-      box-sizing: border-box; /* Keeps input inside the container */
-      font-family: inherit;
-    }
-
-    #loginPopup button {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      font-weight: bold;
-      background: white;
-      color: black;
       border: none;
+      padding: 8px 15px;
+      border-radius: 12px;
       cursor: pointer;
+      font-weight: bold;
+      margin-top: 15px;
+      font-size: 12px;
+      transition: background 0.2s;
     }
+    .entry-delete:hover { background: #cc0000; }
+
+    /* Footer & Popup Fixes */
+    #bottomControls { position: fixed; bottom: 24px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 12px; z-index: 1000; }
+    .icon-btn, .lock-btn { background: white; color: black; border: none; border-radius: 50px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; height: 48px; box-sizing: border-box; }
+    .icon-btn { padding: 0 20px; gap: 8px; }
+    .lock-btn { width: 48px; padding: 0; font-size: 18px; cursor: pointer; }
+    
+    #loginPopup { position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); background: #111; border: 1px solid #333; padding: 16px; border-radius: 20px; width: 240px; display: none; flex-direction: column; gap: 10px; box-sizing: border-box; }
+    #loginPopup input { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 10px; box-sizing: border-box; }
+    #loginPopup button { width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; background: white; color: black; border: none; cursor: pointer; }
 
     .journal-container { max-width: 720px; width: 90%; margin: 20px auto 120px; text-align: left; }
+    .journal-entry { background: rgba(17,17,17,0.8); border: 1px solid #333; padding: 20px; border-radius: 20px; margin-top: 15px; position: relative; }
     textarea#note { width: 100%; padding: 15px; border-radius: 20px; background: #111; color: white; border: 1px solid #333; box-sizing: border-box; }
   </style>
 </head>
@@ -171,24 +148,18 @@
 
   <div class="journal-container">
     <div id="editorArea" style="display:none;">
-      <label for="note">New entry</label>
-      <textarea id="note" rows="6" placeholder="Write today's entry..."></textarea>
-      <button type="button" id="saveBtn" style="margin-top:10px;">Save Entry</button>
+      <textarea id="note" rows="5" placeholder="Write today's entry..."></textarea>
+      <button type="button" id="saveBtn" style="margin-top:10px; width:100%; border-radius:20px; padding:12px; background:white; color:black; font-weight:bold;">Save Entry</button>
     </div>
 
     <h2>Entries</h2>
     <div id="entries"></div>
 
     <div id="bottomControls">
-      <a class="icon-btn" href="index.html">
-        <span class="icon-symbol">🏠</span>
-        <span class="icon-text">HOME</span>
-      </a>
-
+      <a class="icon-btn" href="index.html">🏠 HOME</a>
       <div style="position: relative;">
         <button type="button" id="showLoginBtn" class="lock-btn">🔒</button>
         <button type="button" id="logoutBtn" class="icon-btn" style="display:none;">Sign out</button>
-        
         <div id="loginPopup">
           <input type="email" id="emailInput" placeholder="Email">
           <input type="password" id="passInput" placeholder="Password">
