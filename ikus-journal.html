@@ -75,7 +75,7 @@
 
       document.getElementById('showLoginBtn').onclick = () => {
         const popup = document.getElementById('loginPopup');
-        popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+        popup.style.display = popup.style.display === 'none' ? 'flex' : 'none';
       };
 
       document.getElementById('performLoginBtn').onclick = async () => {
@@ -89,63 +89,80 @@
   </script>
 
   <style>
-    /* 1. FIXED FOOTER ALIGNMENT */
+    /* Footer Layout */
     #bottomControls {
       position: fixed;
       bottom: 24px;
       left: 0;
       right: 0;
       display: flex;
-      justify-content: center; /* Center the whole group */
+      justify-content: center;
       align-items: center;
-      gap: 12px; /* Space between buttons */
+      gap: 12px;
       z-index: 1000;
     }
 
-    /* 2. SHARED BUTTON STYLE */
+    /* Buttons */
     .icon-btn, .lock-btn {
       background: white;
       color: black;
       border: none;
-      border-radius: 50px; /* Pill shape */
+      border-radius: 50px;
       font-weight: bold;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       text-decoration: none;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       height: 48px;
+      box-sizing: border-box;
     }
 
-    /* Home Button Width */
     .icon-btn { padding: 0 20px; gap: 8px; }
+    .lock-btn { width: 48px; padding: 0; font-size: 18px; }
 
-    /* Lock Circle Styling */
-    .lock-btn {
-      width: 48px; /* Force it to be a circle */
-      padding: 0;
-      font-size: 18px;
-    }
-
-    /* 3. LOGIN POPUP */
+    /* Login Popup Fixed */
     #loginPopup {
       position: absolute;
       bottom: 70px;
       left: 50%;
       transform: translateX(-50%);
       background: #111;
-      border: 1px solid #444;
-      padding: 15px;
-      border-radius: 15px;
-      width: 200px;
+      border: 1px solid #333;
+      padding: 16px;
+      border-radius: 20px;
+      width: 240px; /* Slightly wider for better spacing */
       display: none;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      box-sizing: border-box; /* Crucial: ensures padding doesn't push width out */
     }
+
     #loginPopup input {
-      width: 100%; margin-bottom: 8px; padding: 8px;
-      background: #222; border: 1px solid #444; color: white; border-radius: 5px;
+      width: 100%;
+      padding: 12px;
+      background: #222;
+      border: 1px solid #444;
+      color: white;
+      border-radius: 10px;
+      box-sizing: border-box; /* Keeps input inside the container */
+      font-family: inherit;
     }
-    #loginPopup button { width: 100%; padding: 8px; border-radius: 5px; font-weight: bold; }
+
+    #loginPopup button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: bold;
+      background: white;
+      color: black;
+      border: none;
+      cursor: pointer;
+    }
+
+    .journal-container { max-width: 720px; width: 90%; margin: 20px auto 120px; text-align: left; }
+    textarea#note { width: 100%; padding: 15px; border-radius: 20px; background: #111; color: white; border: 1px solid #333; box-sizing: border-box; }
   </style>
 </head>
 <body>
@@ -156,7 +173,7 @@
     <div id="editorArea" style="display:none;">
       <label for="note">New entry</label>
       <textarea id="note" rows="6" placeholder="Write today's entry..."></textarea>
-      <button type="button" id="saveBtn">Save Entry</button>
+      <button type="button" id="saveBtn" style="margin-top:10px;">Save Entry</button>
     </div>
 
     <h2>Entries</h2>
