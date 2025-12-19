@@ -8,44 +8,129 @@
   <meta name="theme-color" content="#050505">
   <title>iku's world</title>
   <style>
-    /* Force index-specific scroll lock */
-    html, body { overflow: hidden; height: 100%; position: fixed; width: 100%; }
-    #bottomControls { 
-      bottom: 24px; /* Standardized level */
-      display: flex; 
-      justify-content: center; 
-      gap: 12px; 
+    /* CRITICAL FIX: Ensure background is black before anything else loads */
+    html {
+      background-color: #050505;
     }
+
+    body {
+      background-color: #050505; /* Fallback for the gradient */
+      margin: 0;
+      padding: 0;
+      color: white;
+      width: 100%;
+      height: 100%;
+      overflow: hidden; 
+      position: fixed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      /* Inherit the transition from your style.css */
+    }
+
+    h1 { font-weight: 300; letter-spacing: 4px; margin: 0; }
+
+    .typewriter-container { 
+      min-height: 1.5em; 
+      margin: 10px 0 20px 0; 
+    }
+
+    img {
+      max-width: 300px;
+      width: 70%;
+      height: auto;
+      border-radius: 10px;
+      margin-bottom: 60px; /* Space for buttons */
+    }
+
+    /* Fixed Button Container */
+    #bottomControls {
+      position: fixed;
+      bottom: 30px; /* Aligned with other pages */
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      z-index: 1000;
+      padding: 0 16px;
+    }
+
+    /* Standardized Button style to match your screenshot */
+    .icon-btn {
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 20px; /* Matches your var(--box-radius) */
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      height: 48px;
+      padding: 0 20px;
+      gap: 8px;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      font-family: Arial, sans-serif;
+    }
+
+    .cursor {
+      font-weight: bold;
+      animation: blink 1s step-end infinite;
+      margin-left: 2px;
+    }
+    @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
   </style>
 </head>
-<body class="mood-night">
-  <h1>iku's world</h1>
+<body class="mood-night"> <h1>iku's world</h1>
   <div class="typewriter-container">
     <p id="status-text"><span id="typewriter"></span><span class="cursor">|</span></p>
   </div>
-  <img src="iku.svg" alt="iku" style="width: 70%; max-width: 300px;">
+
+  <img src="iku.svg" alt="iku">
+
   <div id="bottomControls">
     <a class="icon-btn" href="fragments.html"><span>🐜</span><span>FRAGMENTS</span></a>
     <a class="icon-btn" href="ikus-journal.html"><span>📖</span><span>JOURNAL</span></a>
   </div>
+
   <script>
     function updateAtmosphere() {
       const hour = new Date().getHours();
-      document.body.classList.remove('mood-day', 'mood-evening', 'mood-night');
-      if (hour >= 6 && hour < 17) { document.body.classList.add('mood-day'); return "good morning. i'm leaving soon."; }
-      if (hour >= 17 && hour < 20) { document.body.classList.add('mood-evening'); return "the sun is setting. i'm leaving soon."; }
-      document.body.classList.add('mood-night'); return "it's late. i'm leaving soon.";
+      const body = document.body;
+      body.classList.remove('mood-day', 'mood-evening', 'mood-night');
+
+      if (hour >= 6 && hour < 17) {
+        body.classList.add('mood-day');
+        return "good morning. i'm leaving soon.";
+      } else if (hour >= 17 && hour < 20) {
+        body.classList.add('mood-evening');
+        return "the sun is setting. i'm leaving soon.";
+      } else {
+        body.classList.add('mood-night');
+        return "it's late. i'm leaving soon.";
+      }
     }
+
     const textToType = updateAtmosphere();
     let i = 0;
     function typeWriter() {
       if (i < textToType.length) {
         document.getElementById('typewriter').innerHTML += textToType.charAt(i);
-        i++; setTimeout(typeWriter, 100);
+        i++; 
+        setTimeout(typeWriter, 100);
       }
     }
+
     window.onload = typeWriter;
-    document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+    // Prevents mobile bounce/scroll
+    document.addEventListener('touchmove', (e) => {
+      if(e.touches.length > 1) return;
+      e.preventDefault();
+    }, { passive: false });
   </script>
 </body>
 </html>
