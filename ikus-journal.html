@@ -1,32 +1,132 @@
 <!DOCTYPE html>
 <html>
 <head>
-
   <link rel="icon" type="image/svg" href="iku.svg">
-  
   <link rel="stylesheet" href="style.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>iku's journal</title>
   
   <script type="module">
-  // Import the functions you need from the SDKs
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    // 1. IMPORT FIREBASE
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-  // TODO: Replace the following with your app's Firebase project configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g",
-    databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "iku-website-iku",
-  };
+    // 2. CONFIGURATION
+    const firebaseConfig = {
+      apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g",
+      databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "iku-website-iku",
+    };
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-</script>
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const ADMIN_PASSWORD_HASH = 'aWt1Y29tZWw='; // 'ikucomel'
+    let isAdmin = sessionStorage.getItem('ikus_admin') === '1';
 
-  
+    // 3. CLOUD SYNC: This runs automatically when data changes in the cloud
+    onValue(ref(db, 'entries'), (snapshot) => {
+      const data = snapshot.val();
+      render(data);
+    });
+
+    // 4. THE RENDER FUNCTION
+    function render(data) {
+      const list = document.getElementById('entries');
+      list.innerHTML = '';
+      
+      if (!data) {
+        list.innerHTML = '<p class="muted">No entries yet.</p>';
+        return;
+      }
+
+      // Convert the cloud object into a list we can sort
+      const entries = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+      
+      // Show newest first
+      entries.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach((e) => {
+        const card = document.createElement('div');
+        card.className = 'journal-entry';
+        card.innerHTML = `
+          <div class="entry-date">${new Date(e.date).toLocaleString()}</div>
+          <div class="entry-content"></div>
+        `;
+        // Use textContent for safety against hackers
+        card.querySelector('.entry-content').textContent = e.text;
+
+        if (isAdmin) {
+          const delBtn = document.createElement('button');
+          delBtn.textContent = 'Delete';
+          delBtn.className = 'entry-delete';
+          delBtn.onclick = () => { 
+            if(confirm('Delete this entry from the cloud?')) {
+              remove(ref(db, `entries/${e.id}`));
+            }
+          };
+          card.appendChild(delBtn);
+        }
+        list.appendChild(card);
+      });
+    }
+
+    // 5. BUTTON CLICKS & LOGIN
+    document.addEventListener('DOMContentLoaded', () => {
+      const saveBtn = document.getElementById('saveBtn');
+      const noteInput = document.getElementById('note');
+      const passInput = document.getElementById('adminPassInline');
+      const showLoginBtn = document.getElementById('showLoginInline');
+      const loginBox = document.getElementById('loginBoxInline');
+      const logoutBtn = document.getElementById('logoutInlineVisible');
+      const editorArea = document.getElementById('editorArea');
+
+      // Admin check
+      if (isAdmin) {
+        editorArea.style.display = 'block';
+        logoutBtn.style.display = 'inline-block';
+        showLoginBtn.style.display = 'none';
+      }
+
+      // Save to Cloud
+      saveBtn.onclick = () => {
+        const text = noteInput.value.trim();
+        if (text) {
+          push(ref(db, 'entries'), {
+            date: new Date().toISOString(),
+            text: text
+          });
+          noteInput.value = '';
+        }
+      };
+
+      // Clear All (Cloud)
+      document.getElementById('clearAll').onclick = () => {
+        if(confirm('Delete EVERY entry from the cloud?')) {
+          remove(ref(db, 'entries'));
+        }
+      };
+
+      // Login Logic
+      showLoginBtn.onclick = () => {
+        loginBox.style.display = loginBox.style.display === 'none' ? 'block' : 'none';
+      };
+
+      passInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          if (btoa(passInput.value) === ADMIN_PASSWORD_HASH) {
+            sessionStorage.setItem('ikus_admin', '1');
+            location.reload();
+          } else {
+            alert('Wrong code');
+          }
+        }
+      };
+
+      logoutBtn.onclick = () => {
+        sessionStorage.removeItem('ikus_admin');
+        location.reload();
+      };
+    });
+  </script>
 </head>
 <body>
 
@@ -55,171 +155,10 @@
         <button type="button" id="logoutInlineVisible" class="icon-btn" style="display:none; margin-left:6px;" aria-label="Sign out">Sign out</button>
         <div id="loginBoxInline" style="display:none;">
           <input id="adminPassInline" type="password" placeholder="Secret code">
-          <button type="button" id="logoutBtnInline" style="display:none;" aria-label="Sign out">Sign out</button>
         </div>
       </div>
     </div>
   </div>
-
-  <script>
-    // 'aWt1Y29tZWw=' is 'ikucomel' in Base64
-    const ADMIN_PASSWORD_HASH = 'aWt1Y29tZWw=';
-    let isAdmin = false;
-
-    const STORAGE_KEY = 'ikus_journal_entries_v1';
-
-    function loadEntries(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
-      }catch(e){ return []; }
-    }
-
-    function saveEntryToCloud(text) {
-    const entriesRef = ref(db, 'entries');
-    const newEntryRef = push(entriesRef);
-    set(newEntryRef, {
-    date: new Date().toISOString(),
-    text: text
-    });
-    }
-
-
-    function render(){
-      const list = document.getElementById('entries');
-      list.innerHTML = '';
-      const entries = loadEntries();
-      if(entries.length === 0){
-        list.innerHTML = '<p class="muted">No entries yet.</p>';
-        return;
-      }
-      // show newest first
-      entries.slice().reverse().forEach((e, i) => {
-        const idx = entries.length - 1 - i;
-        const card = document.createElement('div');
-        card.className = 'journal-entry';
-
-        const hd = document.createElement('div');
-        hd.className = 'entry-date';
-        hd.textContent = new Date(e.date).toLocaleString();
-
-        const body = document.createElement('div');
-        body.className = 'entry-content';
-        body.textContent = e.text;
-
-        const controls = document.createElement('div');
-        controls.className = 'entry-controls';
-        // Only show delete when admin
-        if(isAdmin){
-          const del = document.createElement('button');
-          del.type = 'button';
-          del.className = 'entry-delete';
-          del.textContent = 'Delete';
-          del.addEventListener('click', ()=>{
-            if(!confirm('Delete this entry?')) return;
-            const all = loadEntries();
-            all.splice(idx,1);
-            saveEntries(all);
-            render();
-          });
-          controls.appendChild(del);
-        }
-
-        card.appendChild(hd);
-        card.appendChild(body);
-        card.appendChild(controls);
-        list.appendChild(card);
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', ()=>{
-      // admin login UI (inline only)
-      const showLoginInline = document.getElementById('showLoginInline');
-      const loginBoxInline = document.getElementById('loginBoxInline');
-      const adminPassInline = document.getElementById('adminPassInline');
-      const logoutBtnInline = document.getElementById('logoutBtnInline');
-      const logoutInlineVisible = document.getElementById('logoutInlineVisible');
-
-      function toggleLoginBoxInline(){
-        loginBoxInline.style.display = loginBoxInline.style.display === 'none' ? 'block' : 'none';
-      }
-
-      showLoginInline.addEventListener('click', toggleLoginBoxInline);
-
-      function enableAdmin(){
-        isAdmin = true;
-        sessionStorage.setItem('ikus_admin','1');
-        document.getElementById('editorArea').style.display = 'block';
-        // hide lock toggle and login box, show visible logout
-        showLoginInline.style.display = 'none';
-        loginBoxInline.style.display = 'none';
-        if(logoutInlineVisible) logoutInlineVisible.style.display = 'inline-block';
-        render();
-      }
-
-      function disableAdmin(){
-        isAdmin = false;
-        sessionStorage.removeItem('ikus_admin');
-        document.getElementById('editorArea').style.display = 'none';
-        // restore lock toggle, hide visible logout
-        showLoginInline.style.display = 'inline-block';
-        if(logoutInlineVisible) logoutInlineVisible.style.display = 'none';
-        render();
-      }
-
-      // restore session
-      if(sessionStorage.getItem('ikus_admin') === '1') enableAdmin();
-
-      function tryLogin(passValue){
-        // btoa converts the user's input into a Base64 string
-        // then we compare it to your hashed constant
-        return btoa(passValue) === ADMIN_PASSWORD_HASH;
-      }
-
-      // allow Enter key to submit the secret code
-      adminPassInline.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter'){
-          e.preventDefault();
-          const pass = adminPassInline.value || '';
-          if(tryLogin(pass)){
-            adminPassInline.value = '';
-            enableAdmin();
-          }else{
-            alert('Wrong secret code');
-          }
-        }
-      });
-
-      if(logoutInlineVisible){
-        logoutInlineVisible.addEventListener('click', ()=>{
-          disableAdmin();
-        });
-      }
-
-
-      // Save and clear only available to admin
-      document.getElementById('saveBtn').addEventListener('click', ()=>{
-        if(!isAdmin){ alert('Enter secret code to edit.'); return; }
-        const ta = document.getElementById('note');
-        const text = ta.value.trim();
-        if(!text){ alert('Write something before saving.'); return; }
-        const entries = loadEntries();
-        entries.push({date: new Date().toISOString(), text});
-        saveEntries(entries);
-        ta.value = '';
-        render();
-      });
-
-      document.getElementById('clearAll').addEventListener('click', ()=>{
-        if(!isAdmin){ alert('Enter secret code to edit.'); return; }
-        if(!confirm('Clear all entries? This cannot be undone.')) return;
-        saveEntries([]);
-        render();
-      });
-
-      render();
-    });
-  </script>
 
 </body>
 </html>
