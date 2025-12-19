@@ -24,6 +24,38 @@
     let isAdmin = false;
     let lastData = null;
 
+    // --- AUDIO ENGINE ---
+    let audioCtx;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playSound(type) {
+      initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      if (type === 'click') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
+      } else if (type === 'save') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.5);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.5);
+      }
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 1.5);
+    }
+
     // --- AUTH WATCHER ---
     onAuthStateChanged(auth, (user) => {
       const editor = document.getElementById('editorArea');
@@ -71,6 +103,7 @@
           delBtn.textContent = 'Delete Entry';
           delBtn.className = 'entry-delete';
           delBtn.onclick = () => {
+            playSound('click');
             if(confirm('Permanently delete this entry?')) {
               remove(ref(db, `entries/${e.id}`));
             }
@@ -87,10 +120,12 @@
         if (ta.value.trim() && isAdmin) {
           push(ref(db, 'entries'), { date: new Date().toISOString(), text: ta.value.trim() });
           ta.value = '';
+          playSound('save');
         }
       };
 
       document.getElementById('showLoginBtn').onclick = () => {
+        playSound('click');
         const popup = document.getElementById('loginPopup');
         popup.style.display = popup.style.display === 'none' ? 'flex' : 'none';
       };
@@ -100,40 +135,37 @@
         const pass = document.getElementById('passInput').value;
         try {
           await signInWithEmailAndPassword(auth, email, pass);
+          playSound('save');
         } catch (e) { alert("Login failed."); }
       };
 
-      document.getElementById('logoutBtn').onclick = () => signOut(auth);
+      document.getElementById('logoutBtn').onclick = () => {
+        playSound('click');
+        signOut(auth);
+      };
+
+      // Add sound to the Home button
+      document.querySelector('.icon-btn').addEventListener('click', () => playSound('click'));
     });
   </script>
 
   <style>
-    /* Footer & Popup Styling */
-    #bottomControls { 
-      position: fixed; bottom: 24px; left: 0; right: 0; 
-      display: flex; justify-content: center; align-items: center; gap: 12px; z-index: 1000; 
-    }
-
-    .icon-btn, .lock-btn, .logout-symbol-btn { 
-      background: white; color: black; border: none; border-radius: 50px; 
-      font-weight: bold; display: inline-flex; align-items: center; justify-content: center; 
-      text-decoration: none; height: 48px; box-sizing: border-box; cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
+    /* Your existing CSS remains exactly the same */
+    #bottomControls { position: fixed; bottom: 24px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 12px; z-index: 1000; }
+    .icon-btn, .lock-btn, .logout-symbol-btn { background: white; color: black; border: none; border-radius: 50px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; height: 48px; box-sizing: border-box; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
     .icon-btn { padding: 0 20px; gap: 8px; }
     .lock-btn, .logout-symbol-btn { width: 48px; padding: 0; font-size: 18px; }
-    
     #loginPopup { position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); background: #111; border: 1px solid #333; padding: 16px; border-radius: 20px; width: 240px; display: none; flex-direction: column; gap: 10px; box-sizing: border-box; }
     #loginPopup input { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 10px; box-sizing: border-box; }
     #loginPopup button { width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; background: white; color: black; border: none; cursor: pointer; }
-
-    /* Journal Body Styling */
     .journal-container { max-width: 720px; width: 90%; margin: 20px auto 120px; text-align: left; }
     .journal-entry { background: rgba(17,17,17,0.8); border: 1px solid #333; padding: 20px; border-radius: 20px; margin-top: 15px; position: relative; }
     .entry-date { font-size: 0.85rem; color: #bbb; margin-bottom: 6px; }
     .entry-content { white-space: pre-wrap; }
     .entry-delete { background: #ff4d4d; color: white; border: none; padding: 8px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 12px; }
     textarea#note { width: 100%; padding: 15px; border-radius: 20px; background: #111; color: white; border: 1px solid #333; box-sizing: border-box; }
+    h1 { text-align: center; font-weight: 300; letter-spacing: 4px; margin-top: 40px; }
+    h2 { font-weight: 300; opacity: 0.6; margin-top: 40px; }
   </style>
 </head>
 <body>
