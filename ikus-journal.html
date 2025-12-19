@@ -5,206 +5,74 @@
   <link rel="stylesheet" href="style.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  
   <meta name="theme-color" content="#050505">
-  
   <title>iku's journal</title>
-  
+  <style>
+    body { justify-content: flex-start; overflow-y: auto; }
+    h1 { margin-top: 40px; }
+    #bottomControls { 
+      bottom: 24px; /* Standardized level */
+      display: flex; 
+      justify-content: center; 
+      gap: 12px; 
+    }
+    .lock-btn { border: none; cursor: pointer; }
+  </style>
   <script type="module">
-    // ... (Your existing Firebase and Audio script stays exactly the same) ...
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g",
-      databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "iku-website-iku",
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
-    let isAdmin = false;
-    let lastData = null;
-
+    const firebaseConfig = { apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g", databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "iku-website-iku" };
+    const app = initializeApp(firebaseConfig); const db = getDatabase(app); const auth = getAuth(app);
     let audioCtx;
-    function initAudio() {
+    function playSound(t) {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+      osc.frequency.setValueAtTime(t === 'save' ? 440 : 1200, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + (t === 'save' ? 1.5 : 0.1));
+      osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 1.5);
     }
-
-    function playSound(type) {
-      initAudio();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      if (type === 'click') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
-      } else if (type === 'save') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.5);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.5);
-      }
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 1.5);
-    }
-
-    onAuthStateChanged(auth, (user) => {
-      const editor = document.getElementById('editorArea');
-      const logout = document.getElementById('logoutBtn');
-      const lock = document.getElementById('showLoginBtn');
-      if (user) {
-        isAdmin = true;
-        editor.style.display = 'block';
-        logout.style.display = 'inline-flex';
-        lock.style.display = 'none';
-        document.getElementById('loginPopup').style.display = 'none';
-      } else {
-        isAdmin = false;
-        editor.style.display = 'none';
-        logout.style.display = 'none';
-        lock.style.display = 'inline-flex';
-      }
-      if(lastData) render(lastData);
+    onAuthStateChanged(auth, user => {
+      document.getElementById('editorArea').style.display = user ? 'block' : 'none';
+      document.getElementById('logoutBtn').style.display = user ? 'inline-flex' : 'none';
+      document.getElementById('showLoginBtn').style.display = user ? 'none' : 'inline-flex';
     });
-
-    onValue(ref(db, 'entries'), (snapshot) => {
-      lastData = snapshot.val();
-      render(lastData);
-    });
-
-    function render(data) {
-      const list = document.getElementById('entries');
-      list.innerHTML = '';
-      if (!data) { list.innerHTML = '<p class="muted">No entries yet.</p>'; return; }
-      const entries = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-      entries.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach((e) => {
-        const card = document.createElement('div');
-        card.className = 'journal-entry';
-        card.innerHTML = `<div class="entry-date">${new Date(e.date).toLocaleString()}</div><div class="entry-content"></div>`;
-        card.querySelector('.entry-content').textContent = e.text;
-        if (isAdmin) {
-          const delBtn = document.createElement('button');
-          delBtn.textContent = 'Delete Entry';
-          delBtn.className = 'entry-delete';
-          delBtn.onclick = () => {
-            playSound('click');
-            if(confirm('Permanently delete this entry?')) { remove(ref(db, `entries/${e.id}`)); }
-          };
-          card.appendChild(delBtn);
-        }
-        list.appendChild(card);
+    onValue(ref(db, 'entries'), s => {
+      const list = document.getElementById('entries'); list.innerHTML = '';
+      const data = s.val(); if (data) Object.keys(data).reverse().forEach(k => {
+        const div = document.createElement('div'); div.className = 'journal-entry';
+        div.innerHTML = `<div class="entry-date">${new Date(data[k].date).toLocaleString()}</div><div class="entry-content">${data[k].text}</div>`;
+        list.appendChild(div);
       });
-    }
-
+    });
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('saveBtn').onclick = () => {
         const ta = document.getElementById('note');
-        if (ta.value.trim() && isAdmin) {
-          push(ref(db, 'entries'), { date: new Date().toISOString(), text: ta.value.trim() });
-          ta.value = '';
-          playSound('save');
-        }
+        if (ta.value) { push(ref(db, 'entries'), { date: new Date().toISOString(), text: ta.value }); ta.value = ''; playSound('save'); }
       };
-      document.getElementById('showLoginBtn').onclick = () => {
-        playSound('click');
-        const popup = document.getElementById('loginPopup');
-        popup.style.display = popup.style.display === 'none' ? 'flex' : 'none';
-      };
+      document.getElementById('showLoginBtn').onclick = () => { playSound('click'); const p = document.getElementById('loginPopup'); p.style.display = p.style.display === 'none' ? 'flex' : 'none'; };
       document.getElementById('performLoginBtn').onclick = async () => {
-        const email = document.getElementById('emailInput').value;
-        const pass = document.getElementById('passInput').value;
-        try { await signInWithEmailAndPassword(auth, email, pass); playSound('save'); } catch (e) { alert("Login failed."); }
+        try { await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value); playSound('save'); } catch { alert("Failed"); }
       };
       document.getElementById('logoutBtn').onclick = () => { playSound('click'); signOut(auth); };
-      document.querySelector('.icon-btn').addEventListener('click', () => playSound('click'));
     });
   </script>
-
-  <style>
-    /* FIX 2: Ensures the background is black to match browser corners */
-    html, body {
-      background-color: #050505;
-      color: white;
-      margin: 0;
-      padding: 0;
-    }
-
-    #bottomControls { position: fixed; bottom: 24px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 12px; z-index: 1000; }
-    
-    .icon-btn, .lock-btn, .logout-symbol-btn { 
-      background: white; 
-      color: black; 
-      border: none; 
-      border-radius: 50px; 
-      font-weight: bold; 
-      display: inline-flex; 
-      align-items: center; 
-      justify-content: center; 
-      text-decoration: none; 
-      height: 48px; 
-      box-sizing: border-box; 
-      cursor: pointer; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      
-      /* FIX 3: Consistent font for all buttons */
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    .icon-btn { padding: 0 20px; gap: 8px; font-size: 0.9rem; }
-    .lock-btn, .logout-symbol-btn { width: 48px; padding: 0; font-size: 18px; }
-    
-    #loginPopup { position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); background: #111; border: 1px solid #333; padding: 16px; border-radius: 20px; width: 240px; display: none; flex-direction: column; gap: 10px; box-sizing: border-box; }
-    #loginPopup input { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 10px; box-sizing: border-box; }
-    #loginPopup button { width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; background: white; color: black; border: none; cursor: pointer; }
-    
-    .journal-container { max-width: 720px; width: 90%; margin: 20px auto 120px; text-align: left; }
-    .journal-entry { background: rgba(17,17,17,0.8); border: 1px solid #333; padding: 20px; border-radius: 20px; margin-top: 15px; position: relative; }
-    .entry-date { font-size: 0.85rem; color: #bbb; margin-bottom: 6px; }
-    .entry-content { white-space: pre-wrap; font-family: 'Courier New', Courier, monospace; } /* Content can stay typewriter style */
-    
-    .entry-delete { background: #ff4d4d; color: white; border: none; padding: 8px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 12px; font-family: sans-serif; }
-    textarea#note { width: 100%; padding: 15px; border-radius: 20px; background: #111; color: white; border: 1px solid #333; box-sizing: border-box; font-family: 'Courier New', Courier, monospace; }
-    
-    h1 { text-align: center; font-weight: 300; letter-spacing: 4px; margin-top: 40px; font-family: sans-serif; }
-    h2 { font-weight: 300; opacity: 0.6; margin-top: 40px; font-family: sans-serif; }
-  </style>
 </head>
-<body>
-
+<body class="mood-night">
   <h1>iku's journal</h1>
-
   <div class="journal-container">
-    <div id="editorArea" style="display:none; text-align: left;">
-      <textarea id="note" rows="5" placeholder="Write today's entry..."></textarea>
-      <button type="button" id="saveBtn" style="margin-top:10px; width:100%; border-radius:20px; padding:12px; background:white; color:black; font-weight:bold; cursor:pointer; font-family: sans-serif;">Save Entry</button>
-    </div>
-
-    <h2>Entries</h2>
+    <div id="editorArea" style="display:none;"><textarea id="note" rows="5"></textarea><button id="saveBtn" style="width:100%; margin-top:10px;">Save Entry</button></div>
     <div id="entries"></div>
-
     <div id="bottomControls">
-      <a class="icon-btn" href="index.html">🏠 HOME</a>
-      
-      <div style="position: relative;">
-        <button type="button" id="showLoginBtn" class="lock-btn">🔒</button>
-        <button type="button" id="logoutBtn" class="logout-symbol-btn" style="display:none;">🔓</button>
-        
-        <div id="loginPopup">
-          <input type="email" id="emailInput" placeholder="Email">
-          <input type="password" id="passInput" placeholder="Password">
-          <button type="button" id="performLoginBtn">Login</button>
-        </div>
+      <a class="icon-btn" href="index.html" onclick="playSound('click')">🏠 HOME</a>
+      <button id="showLoginBtn" class="lock-btn">🔒</button>
+      <button id="logoutBtn" class="lock-btn" style="display:none;">🔓</button>
+      <div id="loginPopup" style="position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); background: #111; border: 1px solid #333; padding: 16px; border-radius: 20px; display: none; flex-direction: column; gap: 10px;">
+        <input type="email" id="emailInput" placeholder="Email" style="background:#222; color:white; border:1px solid #444; padding:8px; border-radius:10px;">
+        <input type="password" id="passInput" placeholder="Password" style="background:#222; color:white; border:1px solid #444; padding:8px; border-radius:10px;">
+        <button id="performLoginBtn">Login</button>
       </div>
     </div>
   </div>
-
 </body>
 </html>
