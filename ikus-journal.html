@@ -41,8 +41,8 @@
   </div>
 
   <script>
-    // Simple client-side admin gate (not secure for public sites).
-    const ADMIN_PASSWORD = 'ikucomel';
+    // 'aWt1Y29tZWw=' is 'ikucomel' in Base64
+    const ADMIN_PASSWORD_HASH = 'aWt1Y29tZWw=';
     let isAdmin = false;
 
     const STORAGE_KEY = 'ikus_journal_entries_v1';
@@ -144,7 +144,9 @@
       if(sessionStorage.getItem('ikus_admin') === '1') enableAdmin();
 
       function tryLogin(passValue){
-        return passValue === ADMIN_PASSWORD;
+        // btoa converts the user's input into a Base64 string
+        // then we compare it to your hashed constant
+        return btoa(passValue) === ADMIN_PASSWORD_HASH;
       }
 
       // allow Enter key to submit the secret code
