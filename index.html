@@ -8,7 +8,6 @@
   <title>iku's world</title>
   
   <style>
-    /* Image sizing to keep it consistent */
     img {
       max-width: 300px;
       width: 100%;
@@ -35,7 +34,7 @@
       margin-bottom: 20px;
     }
 
-    /* Footer Layout - Same as journal page */
+    /* Footer Layout */
     #bottomControls {
       position: fixed;
       bottom: 24px;
@@ -44,10 +43,10 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      gap: 12px; /* Space between buttons */
       z-index: 1000;
     }
 
-    /* Matching the Journal button style to the Home button */
     .icon-btn {
       background: white;
       color: black;
@@ -63,6 +62,7 @@
       padding: 0 20px;
       gap: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      font-size: 0.9rem;
     }
   </style>
 </head>
@@ -79,9 +79,13 @@
   </div>
 
   <div id="bottomControls">
+    <a class="icon-btn" href="fragments.html">
+      <span class="icon-symbol">✨</span>
+      <span class="icon-text">FRAGMENTS</span>
+    </a>
     <a class="icon-btn" href="ikus-journal.html">
       <span class="icon-symbol">📖</span>
-      <span class="icon-text">IKU'S JOURNAL</span>
+      <span class="icon-text">JOURNAL</span>
     </a>
   </div>
 
