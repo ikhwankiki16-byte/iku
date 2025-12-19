@@ -8,20 +8,29 @@
   <meta name="theme-color" content="#050505">
   <title>iku's fragments</title>
   <style>
-    body { font-family: 'Courier New', monospace; overflow: hidden; }
-    #void { position: fixed; inset: 0; z-index: 0; }
-    .fragment { position: absolute; white-space: nowrap; pointer-events: none; color: rgba(255,255,255,0.6); z-index: 1; }
-    .ui-layer { position: absolute; top: 30px; left: 30px; z-index: 10; opacity: 0.5; }
-    #bottomControls { bottom: 24px; display: flex; justify-content: center; }
-    .icon-btn { font-family: Arial, sans-serif; } /* Keep button font clean */
+    html { background-color: #050505; }
+    body {
+      margin: 0; overflow: hidden; background-color: #050505;
+      color: white; font-family: 'Courier New', monospace;
+      height: 100vh; width: 100vw;
+    }
+    #void { position: fixed; inset: 0; z-index: 1; }
+    .fragment { position: absolute; white-space: nowrap; pointer-events: none; color: rgba(255,255,255,0.6); }
+    #bottomControls {
+      position: fixed; bottom: 30px; left: 0; right: 0;
+      display: flex; justify-content: center; z-index: 1000;
+    }
+    .icon-btn {
+      background: white; color: black; border-radius: 20px;
+      font-weight: 800; display: inline-flex; align-items: center;
+      text-decoration: none; height: 48px; padding: 0 24px;
+      font-family: Arial, sans-serif; font-size: 0.9rem;
+    }
   </style>
 </head>
 <body class="mood-night">
-  <div class="ui-layer"><h1>FRAGMENTS</h1></div>
   <div id="void"></div>
-  <div id="bottomControls">
-    <a class="icon-btn" href="index.html">🐜 HOME</a>
-  </div>
+  <div id="bottomControls"><a class="icon-btn" href="index.html">🐜 HOME</a></div>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
