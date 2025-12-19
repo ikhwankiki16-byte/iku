@@ -4,32 +4,36 @@
   <link rel="icon" type="image/svg" href="iku.svg">
   <link rel="stylesheet" href="style.css">
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   
   <meta name="theme-color" content="#050505">
   
   <title>iku's world</title>
   
   <style>
-    /* GLOBAL RESET: Ensures the whole screen is dark */
+    /* GLOBAL RESET: Removes scrollbars and locks the view */
     html, body {
       background-color: #050505;
       margin: 0;
       padding: 0;
-      color: white; /* Ensures text stays visible */
+      color: white;
+      width: 100%;
+      height: 100%;
+      overflow: hidden; /* This hides both horizontal and vertical scrollbars */
+      position: fixed; /* Extra layer of protection against mobile 'bounce' scrolling */
     }
 
     body {
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh;
+      justify-content: center; /* Centers everything vertically in the non-scrollable space */
       text-align: center;
     }
 
     img {
       max-width: 300px;
-      width: 100%;
+      width: 70%; /* Scaled down slightly to ensure it never causes overflow on small screens */
       height: auto;
       border-radius: 10px;
       margin: 20px 0;
@@ -56,7 +60,7 @@
     /* Footer Layout */
     #bottomControls {
       position: fixed;
-      bottom: 24px;
+      bottom: 40px; /* Slightly higher for a cleaner floating look */
       left: 0;
       right: 0;
       display: flex;
@@ -82,8 +86,12 @@
       gap: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       font-size: 0.9rem;
-      /* Font consistency fix */
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      transition: transform 0.2s ease;
+    }
+    
+    .icon-btn:active {
+      transform: scale(0.95);
     }
   </style>
 </head>
@@ -113,19 +121,9 @@
   <script>
     function updateAtmosphere() {
       const hour = new Date().getHours();
-      const body = document.body;
-      body.classList.remove('mood-day', 'mood-evening', 'mood-night');
-
-      if (hour >= 6 && hour < 17) {
-        body.classList.add('mood-day');
-        return "good morning. i'm leaving soon.";
-      } else if (hour >= 17 && hour < 20) {
-        body.classList.add('mood-evening');
-        return "the sun is setting. i'm leaving soon.";
-      } else {
-        body.classList.add('mood-night');
-        return "it's late. i'm leaving soon.";
-      }
+      if (hour >= 6 && hour < 17) return "good morning. i'm leaving soon.";
+      if (hour >= 17 && hour < 20) return "the sun is setting. i'm leaving soon.";
+      return "it's late. i'm leaving soon.";
     }
 
     const textToType = updateAtmosphere();
@@ -142,6 +140,11 @@
     }
 
     window.onload = typeWriter;
+    
+    // Prevents mobile touch-drag scrolling
+    document.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+    }, { passive: false });
   </script>
 
 </body>
