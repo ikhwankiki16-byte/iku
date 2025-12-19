@@ -8,9 +8,10 @@
   <title>iku's journal</title>
   
   <script type="module">
-    // 1. IMPORT FIREBASE
+    // 1. IMPORT FIREBASE SDKs
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     // 2. CONFIGURATION
     const firebaseConfig = {
@@ -19,18 +20,44 @@
       projectId: "iku-website-iku",
     };
 
+    // 3. INITIALIZE
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const ADMIN_PASSWORD_HASH = 'aWt1Y29tZWw='; // 'ikucomel'
-    let isAdmin = sessionStorage.getItem('ikus_admin') === '1';
+    const auth = getAuth(app);
+    
+    let isAdmin = false;
 
-    // 3. CLOUD SYNC: This runs automatically when data changes in the cloud
-    onValue(ref(db, 'entries'), (snapshot) => {
-      const data = snapshot.val();
-      render(data);
+    // 4. AUTH STATE LISTENER (Runs automatically when you login/logout)
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is Logged In
+        isAdmin = true;
+        console.log("Logged in as:", user.email);
+        
+        document.getElementById('editorArea').style.display = 'block';
+        document.getElementById('logoutBtn').style.display = 'inline-block';
+        document.getElementById('showLoginBtn').style.display = 'none';
+        document.getElementById('loginPopup').style.display = 'none'; // Hide popup if open
+      } else {
+        // User is Logged Out
+        isAdmin = false;
+        console.log("Logged out");
+
+        document.getElementById('editorArea').style.display = 'none';
+        document.getElementById('logoutBtn').style.display = 'none';
+        document.getElementById('showLoginBtn').style.display = 'inline-block';
+      }
+      // Refresh the list to show/hide delete buttons
+      // We trigger a re-render using the last known data if possible, 
+      // but onValue usually handles this.
     });
 
-    // 4. THE RENDER FUNCTION
+    // 5. DATABASE SYNC
+    onValue(ref(db, 'entries'), (snapshot) => {
+      render(snapshot.val());
+    });
+
+    // 6. RENDER FUNCTION
     function render(data) {
       const list = document.getElementById('entries');
       list.innerHTML = '';
@@ -40,26 +67,28 @@
         return;
       }
 
-      // Convert the cloud object into a list we can sort
       const entries = Object.keys(data).map(key => ({ id: key, ...data[key] }));
       
-      // Show newest first
+      // Sort newest first
       entries.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach((e) => {
         const card = document.createElement('div');
         card.className = 'journal-entry';
+        
         card.innerHTML = `
           <div class="entry-date">${new Date(e.date).toLocaleString()}</div>
           <div class="entry-content"></div>
         `;
-        // Use textContent for safety against hackers
+        // Safe text insertion
         card.querySelector('.entry-content').textContent = e.text;
 
+        // Show delete button ONLY if logged in
         if (isAdmin) {
           const delBtn = document.createElement('button');
           delBtn.textContent = 'Delete';
           delBtn.className = 'entry-delete';
+          delBtn.style.marginTop = '10px';
           delBtn.onclick = () => { 
-            if(confirm('Delete this entry from the cloud?')) {
+            if(confirm('Delete this entry permanently?')) {
               remove(ref(db, `entries/${e.id}`));
             }
           };
@@ -69,70 +98,114 @@
       });
     }
 
-    // 5. BUTTON CLICKS & LOGIN
+    // 7. EVENT LISTENERS
     document.addEventListener('DOMContentLoaded', () => {
-      const saveBtn = document.getElementById('saveBtn');
-      const noteInput = document.getElementById('note');
-      const passInput = document.getElementById('adminPassInline');
-      const showLoginBtn = document.getElementById('showLoginInline');
-      const loginBox = document.getElementById('loginBoxInline');
-      const logoutBtn = document.getElementById('logoutInlineVisible');
-      const editorArea = document.getElementById('editorArea');
-
-      // Admin check
-      if (isAdmin) {
-        editorArea.style.display = 'block';
-        logoutBtn.style.display = 'inline-block';
-        showLoginBtn.style.display = 'none';
-      }
-
-      // Save to Cloud
-      saveBtn.onclick = () => {
-        const text = noteInput.value.trim();
-        if (text) {
+      
+      // -- SAVE BUTTON --
+      document.getElementById('saveBtn').onclick = () => {
+        const ta = document.getElementById('note');
+        const text = ta.value.trim();
+        if (text && isAdmin) {
           push(ref(db, 'entries'), {
             date: new Date().toISOString(),
             text: text
           });
-          noteInput.value = '';
+          ta.value = '';
+        } else if (!isAdmin) {
+          alert("You must be logged in to save.");
         }
       };
 
-      // Clear All (Cloud)
+      // -- CLEAR ALL BUTTON --
       document.getElementById('clearAll').onclick = () => {
-        if(confirm('Delete EVERY entry from the cloud?')) {
+        if(isAdmin && confirm('Delete EVERY entry from the cloud?')) {
           remove(ref(db, 'entries'));
         }
       };
 
-      // Login Logic
+      // -- LOGIN UI LOGIC --
+      const loginPopup = document.getElementById('loginPopup');
+      const showLoginBtn = document.getElementById('showLoginBtn');
+      const performLoginBtn = document.getElementById('performLoginBtn');
+      const emailInput = document.getElementById('emailInput');
+      const passInput = document.getElementById('passInput');
+
+      // Toggle Popup
       showLoginBtn.onclick = () => {
-        loginBox.style.display = loginBox.style.display === 'none' ? 'block' : 'none';
+        const isHidden = loginPopup.style.display === 'none';
+        loginPopup.style.display = isHidden ? 'block' : 'none';
       };
 
-      passInput.onkeydown = (e) => {
-        if (e.key === 'Enter') {
-          if (btoa(passInput.value) === ADMIN_PASSWORD_HASH) {
-            sessionStorage.setItem('ikus_admin', '1');
-            location.reload();
-          } else {
-            alert('Wrong code');
-          }
+      // Perform Login
+      performLoginBtn.onclick = async () => {
+        const email = emailInput.value;
+        const pass = passInput.value;
+        try {
+          await signInWithEmailAndPassword(auth, email, pass);
+          // onAuthStateChanged will handle the UI updates
+          emailInput.value = '';
+          passInput.value = '';
+        } catch (error) {
+          alert("Login Failed: " + error.message);
         }
       };
 
-      logoutBtn.onclick = () => {
-        sessionStorage.removeItem('ikus_admin');
-        location.reload();
+      // Allow "Enter" key to login
+      passInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') performLoginBtn.click();
+      });
+
+      // -- LOGOUT BUTTON --
+      document.getElementById('logoutBtn').onclick = () => {
+        signOut(auth);
       };
     });
   </script>
+
+  <style>
+    /* Simple popup style for the login box */
+    #loginPopup {
+      position: absolute;
+      bottom: 60px; /* Appears above the lock icon */
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      border: 1px solid #444;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      width: 200px;
+      z-index: 100;
+      text-align: left;
+    }
+    #loginPopup input {
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 8px;
+      box-sizing: border-box;
+      background: #222;
+      border: 1px solid #555;
+      color: white;
+      border-radius: 4px;
+    }
+    #loginPopup button {
+      width: 100%;
+      padding: 8px;
+      cursor: pointer;
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
 
   <h1>iku's journal</h1>
 
   <div class="journal-container">
+    
     <div id="editorArea" style="display:none;">
       <label for="note">New entry</label>
       <textarea id="note" rows="6" placeholder="Write today's entry..."></textarea>
@@ -145,17 +218,26 @@
     <h2>Entries</h2>
     <div id="entries" aria-live="polite"></div>
 
-    <div id="bottomControls">
+    <div id="bottomControls" style="margin-top: 40px; position: relative;">
+      
       <a class="icon-btn" href="index.html" aria-label="Back to Home">
         <span class="icon-symbol">🏠</span>
         <span class="icon-text">HOME</span>
       </a>
-      <div id="inlineAdmin">
-        <button type="button" id="showLoginInline" class="lock-btn" aria-label="Secret code">🔒</button>
-        <button type="button" id="logoutInlineVisible" class="icon-btn" style="display:none; margin-left:6px;" aria-label="Sign out">Sign out</button>
-        <div id="loginBoxInline" style="display:none;">
-          <input id="adminPassInline" type="password" placeholder="Secret code">
+
+      <div id="inlineAdmin" style="display: inline-block; margin-left: 10px;">
+        
+        <button type="button" id="showLoginBtn" class="lock-btn" aria-label="Login">🔒</button>
+        
+        <button type="button" id="logoutBtn" class="icon-btn" style="display:none;" aria-label="Sign out">Sign out</button>
+
+        <div id="loginPopup" style="display:none;">
+          <div style="margin-bottom:5px; font-size:12px; color:#aaa;">Admin Login</div>
+          <input type="email" id="emailInput" placeholder="Email">
+          <input type="password" id="passInput" placeholder="Password">
+          <button type="button" id="performLoginBtn">Login</button>
         </div>
+
       </div>
     </div>
   </div>
