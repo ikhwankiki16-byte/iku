@@ -8,16 +8,16 @@
   <title>iku's world</title>
   
   <style>
-    /* Fixed Image Size logic */
+    /* Image sizing to keep it consistent */
     img {
-      max-width: 300px; /* Limits size so it doesn't get huge */
-      width: 100%;      /* Allows it to shrink on small phones */
+      max-width: 300px;
+      width: 100%;
       height: auto;
       border-radius: 10px;
       margin: 20px 0;
     }
 
-    /* Typewriter Cursor Style */
+    /* Typewriter Cursor */
     .cursor {
       font-weight: bold;
       color: white;
@@ -34,6 +34,36 @@
       min-height: 1.5em;
       margin-bottom: 20px;
     }
+
+    /* Footer Layout - Same as journal page */
+    #bottomControls {
+      position: fixed;
+      bottom: 24px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    /* Matching the Journal button style to the Home button */
+    .icon-btn {
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 50px;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      cursor: pointer;
+      height: 48px;
+      padding: 0 20px;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
   </style>
 </head>
 <body>
@@ -46,9 +76,13 @@
 
   <div>
     <img src="iku.svg" alt="My image" loading="lazy">
-    <div>
-      <a class="journal-btn" href="ikus-journal.html">iku's journal</a>
-    </div>
+  </div>
+
+  <div id="bottomControls">
+    <a class="icon-btn" href="ikus-journal.html">
+      <span class="icon-symbol">📖</span>
+      <span class="icon-text">IKU'S JOURNAL</span>
+    </a>
   </div>
 
   <script>
