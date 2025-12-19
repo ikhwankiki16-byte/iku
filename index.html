@@ -5,13 +5,9 @@
   <link rel="stylesheet" href="style.css">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  
   <meta name="theme-color" content="#050505">
-  
   <title>iku's world</title>
-  
   <style>
-    /* GLOBAL RESET: Removes scrollbars and locks the view */
     html, body {
       background-color: #050505;
       margin: 0;
@@ -19,57 +15,42 @@
       color: white;
       width: 100%;
       height: 100%;
-      overflow: hidden; /* This hides both horizontal and vertical scrollbars */
-      position: fixed; /* Extra layer of protection against mobile 'bounce' scrolling */
+      overflow: hidden; 
+      position: fixed;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-
     body {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center; /* Centers everything vertically in the non-scrollable space */
+      justify-content: center;
       text-align: center;
     }
-
+    h1 { font-weight: 300; letter-spacing: 4px; }
     img {
       max-width: 300px;
-      width: 70%; /* Scaled down slightly to ensure it never causes overflow on small screens */
+      width: 70%;
       height: auto;
       border-radius: 10px;
       margin: 20px 0;
     }
-
-    /* Typewriter Cursor */
     .cursor {
       font-weight: bold;
-      color: white;
       animation: blink 1s step-end infinite;
       margin-left: 2px;
     }
-
-    @keyframes blink {
-      from, to { opacity: 1; }
-      50% { opacity: 0; }
-    }
-
-    .typewriter-container {
-      min-height: 1.5em;
-      margin-bottom: 20px;
-    }
-
-    /* Footer Layout */
+    @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
+    .typewriter-container { min-height: 1.5em; margin-bottom: 20px; }
     #bottomControls {
       position: fixed;
-      bottom: 40px; /* Slightly higher for a cleaner floating look */
+      bottom: 40px;
       left: 0;
       right: 0;
       display: flex;
       justify-content: center;
-      align-items: center;
       gap: 12px;
       z-index: 1000;
     }
-
     .icon-btn {
       background: white;
       color: black;
@@ -78,46 +59,27 @@
       font-weight: bold;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
       text-decoration: none;
-      cursor: pointer;
       height: 48px;
       padding: 0 20px;
       gap: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       font-size: 0.9rem;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      transition: transform 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
     }
-    
-    .icon-btn:active {
-      transform: scale(0.95);
-    }
+    .icon-btn:active { transform: scale(0.95); }
   </style>
 </head>
 <body>
-
   <h1>iku's world</h1>
-  
   <div class="typewriter-container">
     <p id="status-text"><span id="typewriter"></span><span class="cursor">|</span></p>
   </div>
-
-  <div>
-    <img src="iku.svg" alt="My image" loading="lazy">
-  </div>
-
+  <img src="iku.svg" alt="iku">
   <div id="bottomControls">
-    <a class="icon-btn" href="fragments.html">
-      <span class="icon-symbol">✨</span>
-      <span class="icon-text">FRAGMENTS</span>
-    </a>
-    <a class="icon-btn" href="ikus-journal.html">
-      <span class="icon-symbol">📖</span>
-      <span class="icon-text">JOURNAL</span>
-    </a>
+    <a class="icon-btn" href="fragments.html"><span>🐜</span><span>FRAGMENTS</span></a>
+    <a class="icon-btn" href="ikus-journal.html"><span>📖</span><span>JOURNAL</span></a>
   </div>
-
   <script>
     function updateAtmosphere() {
       const hour = new Date().getHours();
@@ -125,27 +87,16 @@
       if (hour >= 17 && hour < 20) return "the sun is setting. i'm leaving soon.";
       return "it's late. i'm leaving soon.";
     }
-
     const textToType = updateAtmosphere();
-    const speed = 100;
-    const element = document.getElementById('typewriter');
     let i = 0;
-
     function typeWriter() {
       if (i < textToType.length) {
-        element.innerHTML += textToType.charAt(i);
-        i++;
-        setTimeout(typeWriter, speed);
+        document.getElementById('typewriter').innerHTML += textToType.charAt(i);
+        i++; setTimeout(typeWriter, 100);
       }
     }
-
     window.onload = typeWriter;
-    
-    // Prevents mobile touch-drag scrolling
-    document.addEventListener('touchmove', function(e) {
-      e.preventDefault();
-    }, { passive: false });
+    document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
   </script>
-
 </body>
 </html>
