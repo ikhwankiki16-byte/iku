@@ -19,9 +19,10 @@ body {
 
   background: radial-gradient(
     circle at center,
-    #0b1c2d 0%,
-    #05070a 60%,
-    #000000 100%
+    #ffffff 0%,
+    #6fa3d1 30%,
+    #0b1c2d 65%,
+    #02060c 100%
   );
 }
 
