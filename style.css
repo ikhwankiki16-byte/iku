@@ -2,7 +2,7 @@
 html, body {
   height: 100%;
   margin: 0;
-  background-color: #000000; /* Deep black fallback */
+  background-color: #000000;
 }
 
 body {
@@ -14,7 +14,6 @@ body {
   min-height: 100vh;
   color: white;
   font-family: Arial, sans-serif;
-  /* Permanent Void Background */
   background: radial-gradient(circle at center, #0b1c2d 0%, #05070a 60%, #000000 100%) !important;
   background-attachment: fixed;
   overflow-x: hidden; 
@@ -27,10 +26,10 @@ body::before {
   inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
   pointer-events: none;
-  z-index: -1;
+  z-index: -1; /* Keeps grain behind everything */
 }
 
-/* 3. UNIVERSAL BUTTON STYLING (The "Iku" Standard) */
+/* 3. UNIVERSAL BUTTON STYLING */
 .icon-btn, .game-btn-small, .lock-btn, .delete-btn {
   background: white;
   color: black;
@@ -48,9 +47,9 @@ body::before {
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
+  z-index: 10; /* Ensures buttons are clickable */
 }
 
-/* Round style for the game, lock, and delete buttons */
 .game-btn-small, .lock-btn, .delete-btn {
   width: 48px;
   padding: 0;
@@ -78,26 +77,40 @@ body::before {
   justify-content: center; 
   align-items: center;
   gap: 12px; 
-  z-index: 1000;
+  z-index: 2000;
   padding: 0 16px;
   box-sizing: border-box;
 }
 
-/* 6. JOURNAL SPECIFIC FIXES (Prevents Text Overlap) */
-.journal-container {
-  /* This ensures the entry list has room to breathe at the bottom */
-  padding-bottom: 120px !important;
+/* 6. JOURNAL & GAME SPECIFIC FIXES */
+#entries, .journal-container {
+  padding-bottom: 150px !important;
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
 }
 
 .entry-card {
-  position: relative; /* Context for the delete button if inside card */
+  position: relative;
   margin-bottom: 20px;
-  padding: 20px;
-  /* Add extra padding-bottom if your delete button is inside the card */
-  padding-bottom: 60px; 
+  padding: 20px 20px 70px 20px !important; 
   text-align: left;
   word-wrap: break-word;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+}
+
+/* Prevent the Game from being squished */
+.game-container {
+  position: relative;
+  z-index: 5;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
 }
