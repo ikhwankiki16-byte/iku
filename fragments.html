@@ -8,26 +8,31 @@
     <title>fragments | iku</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Lock the viewport */
-        html, body {
+        /* 1. DEFINE THE GRADIENT LOCALLY TO PREVENT WHITE FLASH */
+        html { 
+            background: radial-gradient(circle at center, #0b1c2d 0%, #05070a 60%, #000000 100%) no-repeat fixed !important;
+            background-color: #000000 !important; /* Fallback */
             margin: 0;
             padding: 0;
             height: 100vh;
             width: 100vw;
             overflow: hidden;
-            /* Allow style.css gradient to show */
-            background: transparent !important; 
         }
 
-        body {
-            position: fixed;
+        body { 
+            margin: 0; 
+            padding: 0;
+            background: transparent !important; 
+            overflow: hidden; 
+            height: 100vh; 
+            width: 100vw;
+            position: fixed; 
         }
 
         #void { 
             width: 100vw; 
             height: 100vh; 
             position: relative; 
-            /* Transparent so style.css background shows through */
             background: transparent; 
         }
 
@@ -78,8 +83,10 @@
         };
 
         window.ontouchmove = (e) => {
-            mouse.x = e.touches[0].clientX;
-            mouse.y = e.touches[0].clientY;
+            if (e.touches.length > 0) {
+                mouse.x = e.touches[0].clientX;
+                mouse.y = e.touches[0].clientY;
+            }
         };
 
         onValue(ref(db, 'entries'), (snapshot) => {
