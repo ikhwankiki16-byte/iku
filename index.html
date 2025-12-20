@@ -5,13 +5,86 @@
   <link rel="stylesheet" href="style.css">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#000000"> 
   <title>iku's world</title>
   <style>
-    body { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-    h1 { font-weight: 300; letter-spacing: 4px; margin: 0; opacity: 0.9; }
-    .typewriter-container { min-height: 1.5em; margin: 10px 0 20px 0; color: rgba(255,255,255,0.6); }
-    img { max-width: 300px; width: 60%; height: auto; margin-bottom: 80px; }
-    .cursor { font-weight: bold; animation: blink 1s step-end infinite; }
+    /* FORCED BLACK OUTER BACKGROUND */
+    html { 
+      background-color: #000000 !important; 
+      height: 100%;
+      margin: 0;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden; 
+      position: fixed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: white;
+      /* Inherits the black from html but stays transparent for the style.css gradient */
+      background: transparent; 
+    }
+
+    h1 { font-weight: 300; letter-spacing: 4px; margin: 0; }
+    .typewriter-container { min-height: 1.5em; margin: 10px 0 20px 0; }
+    
+    img { 
+      max-width: 300px; 
+      width: 70%; 
+      height: auto; 
+      border-radius: 10px; 
+      margin-bottom: 80px;
+    }
+
+    #bottomControls {
+      position: fixed; 
+      bottom: 30px; 
+      left: 0; 
+      right: 0;
+      display: flex; 
+      justify-content: center; 
+      align-items: center;
+      gap: 12px; 
+      z-index: 1000;
+    }
+
+    .icon-btn {
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 20px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      height: 48px;
+      width: 135px;
+      font-size: 0.85rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .game-btn-small {
+      background: white;
+      color: black;
+      text-decoration: none;
+      height: 48px;
+      width: 48px;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .cursor { font-weight: bold; animation: blink 1s step-end infinite; margin-left: 2px; }
     @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
   </style>
 </head>
@@ -20,12 +93,19 @@
   <div class="typewriter-container">
     <p id="status-text"><span id="typewriter"></span><span class="cursor">|</span></p>
   </div>
+
   <img src="iku.svg" alt="iku">
+
   <div id="bottomControls">
-    <a class="icon-btn" href="fragments.html"><span>🐜</span> FRAGMENTS</a>
+    <a class="icon-btn" href="fragments.html">
+      <span>🐜</span><span>FRAGMENTS</span>
+    </a>
     <a class="game-btn-small" href="game.html">🎮</a>
-    <a class="icon-btn" href="ikus-journal.html"><span>📖</span> JOURNAL</a>
+    <a class="icon-btn" href="ikus-journal.html">
+      <span>📖</span><span>JOURNAL</span>
+    </a>
   </div>
+
   <script>
     function updateAtmosphere() {
       const hour = new Date().getHours();
