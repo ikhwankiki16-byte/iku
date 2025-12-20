@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg" href="iku.svg">
-    <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>iku's mini break</title>
+    <link rel="icon" type="image/svg" href="iku.svg">
+    <link rel="stylesheet" href="style.css">
+    
     <style>
-        /* 1. OVERRIDE GLOBAL CSS */
+        /* 1. OVERRIDE GLOBAL CSS FOR GAME STABILITY */
         html, body {
             height: 100% !important;
             margin: 0;
             padding: 0;
-            overflow: hidden !important; /* Prevent double scrollbars */
-            display: block !important; /* Kill the flexbox that squishes the game */
+            overflow: hidden !important; 
+            display: block !important; /* Disables the flex centering that squishes the canvas */
         }
 
         /* 2. CENTER THE GAME MANUALLY */
@@ -33,7 +34,7 @@
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 20px; 
+            padding: 25px; 
             border-radius: 40px; 
             text-align: center;
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
@@ -41,7 +42,7 @@
         }
 
         h1 { font-weight: 200; letter-spacing: 6px; margin: 0 0 10px 0; font-size: 1.1rem; opacity: 0.6; }
-        #score { font-family: 'Courier New', monospace; font-size: 2.5rem; margin: 0; display: block; font-weight: bold; }
+        #score { font-family: 'Courier New', monospace; font-size: 2.8rem; margin: 0; display: block; font-weight: bold; }
         .high-score-label { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px; }
         
         canvas {
@@ -50,12 +51,21 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             touch-action: none;
             display: block;
-            width: 280px; /* Slightly smaller for mobile safety */
-            height: 350px;
+            /* Standard game size */
+            width: 320px;
+            height: 400px;
         }
+
+        @media (max-height: 700px) {
+            canvas {
+                width: 280px;
+                height: 350px;
+            }
+        }
+
         .controls-hint { margin-top: 15px; font-size: 0.7rem; color: rgba(255,255,255,0.3); letter-spacing: 1px; }
 
-        /* 3. ENSURE HOME BUTTON IS AT BOTTOM */
+        /* Ensure Home Button is at the bottom and uses style.css rules */
         #bottomControls {
             position: fixed;
             bottom: 40px;
@@ -80,7 +90,6 @@
     </div>
 
     <script>
-        // --- GAME LOGIC (Do not change) ---
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreDisplay = document.getElementById("score");
@@ -109,83 +118,7 @@
             }
         }
 
+        // Keyboard Controls
         let keys = {};
         window.addEventListener("keydown", (e) => keys[e.code] = true);
-        window.addEventListener("keyup", (e) => keys[e.code] = false);
-
-        function update() {
-            if (gameOver) return;
-            if (keys["ArrowLeft"]) ball.vx = -5;
-            else if (keys["ArrowRight"]) ball.vx = 5;
-            else ball.vx *= 0.8;
-
-            ball.vy += gravity;
-            ball.x += ball.vx;
-            ball.y += ball.vy;
-
-            if (ball.x < 0) ball.x = canvas.width;
-            if (ball.x > canvas.width) ball.x = 0;
-
-            if (ball.y < canvas.height / 2 && ball.vy < 0) {
-                let scroll = -ball.vy;
-                ball.y += scroll;
-                score++;
-                scoreDisplay.innerText = Math.floor(score / 10);
-                platforms.forEach(p => {
-                    p.y += scroll;
-                    if (p.y > canvas.height) {
-                        p.y = 0;
-                        p.x = Math.random() * (canvas.width - platformWidth);
-                    }
-                });
-            }
-
-            platforms.forEach(p => {
-                if (ball.vy > 0 && 
-                    ball.x + ball.radius > p.x && 
-                    ball.x - ball.radius < p.x + platformWidth &&
-                    ball.y + ball.radius > p.y && 
-                    ball.y + ball.radius < p.y + platformHeight) {
-                    ball.vy = jumpStrength;
-                }
-            });
-
-            if (ball.y > canvas.height) {
-                gameOver = true;
-                const finalScore = Math.floor(score/10);
-                if (finalScore > highScore) {
-                    highScore = finalScore;
-                    localStorage.setItem("iku_highscore", highScore);
-                    highScoreDisplay.innerText = highScore;
-                }
-                setTimeout(() => {
-                    alert("Game Over! Score: " + finalScore);
-                    score = 0; scoreDisplay.innerText = "0";
-                    gameOver = false; ball.y = 200; ball.vy = 0;
-                    createPlatforms();
-                }, 10);
-            }
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-            platforms.forEach(p => ctx.fillRect(p.x, p.y, platformWidth, platformHeight));
-            
-            ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-            ctx.fillStyle = ball.color;
-            ctx.shadowBlur = 15; ctx.shadowColor = "white";
-            ctx.fill();
-            ctx.closePath();
-            ctx.shadowBlur = 0;
-
-            requestAnimationFrame(draw);
-            update();
-        }
-
-        createPlatforms();
-        draw();
-    </script>
-</body>
-</html>
+        window.addEventListener("keyup",
