@@ -8,121 +8,46 @@
     <link rel="stylesheet" href="style.css">
     
     <style>
-        /* 1. RESTORE GRADIENT & PERFORMANCE FIXES */
-        html, body {
-            /* We use fixed attachment so the gradient stays deep while scrolling */
-            background: radial-gradient(circle at center, #0b1c2d 0%, #05070a 60%, #000000 100%) !important;
-            background-attachment: fixed !important;
-            display: block !important; 
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            min-height: 100vh;
-            overflow-x: hidden;
-            overflow-y: auto !important;
-            color: white;
-        }
-
         .title-header { text-align: center; padding: 80px 20px 40px; }
         h1 { font-weight: 200; letter-spacing: 8px; color: white; opacity: 0.8; margin: 0; }
-        
-        .journal-container { 
-            max-width: 1400px; 
-            margin: 0 auto; 
-            padding: 0 20px 150px;
-            position: relative;
-            z-index: 10;
-        }
 
-        /* 2. THE FLEX SYSTEM (LAG-FREE SIDEWAYS) */
-        #entries {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 30px;
-            min-height: 200px;
-            /* Optimized for smoother animations */
-            perspective: 1000px;
-        }
+        .journal-container { max-width: 1400px; margin: 0 auto; }
 
-        .journal-entry { 
-            background: rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 30px;
-            border-radius: 28px;
-            
-            /* Use flex-basis instead of width for smoother logic */
-            flex: 0 1 340px; 
-            min-height: 150px;
-            cursor: pointer;
-            
-            /* Hardware Acceleration: GPU handles the movement now */
-            transform: translateZ(0);
-            will-change: flex-basis, transform;
-
-            transition: 
-                flex-basis 0.7s cubic-bezier(0.25, 1, 0.5, 1), 
-                transform 0.6s ease, 
-                filter 0.5s ease, 
-                opacity 0.5s ease,
-                background 0.5s ease;
-        }
-
-        .journal-entry:hover {
-            flex-basis: 520px; /* Sideways expansion */
-            transform: translateY(-8px) translateZ(0);
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        /* Focus effect on neighbors */
-        #entries:has(.journal-entry:hover) .journal-entry:not(:hover) {
-            opacity: 0.4;
-            filter: blur(3px);
-            transform: scale(0.97) translateZ(0);
-        }
-
-        /* 3. SMOOTH PRESS-TO-EXPAND CONTENT */
+        /* Smooth Press-to-Expand Logic */
         .entry-content {
             max-height: 0;
             opacity: 0;
             overflow: hidden;
             margin-top: 0;
-            transition: 
-                max-height 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
-                opacity 0.5s ease, 
-                margin-top 0.5s ease;
             font-family: 'Georgia', serif;
             line-height: 1.8;
             color: rgba(255,255,255,0.7);
+            transition: max-height 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease, margin-top 0.5s ease;
         }
 
         .journal-entry.expanded {
-            flex-basis: 100% !important; /* Take full row */
+            flex-basis: 100% !important;
             max-width: 1100px;
-            background: rgba(255, 255, 255, 0.07);
+            cursor: default;
         }
 
         .journal-entry.expanded .entry-content {
             max-height: 2000px;
             opacity: 1;
-            margin-top: 25px;
+            margin-top: 20px;
             padding-top: 20px;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
 
         .entry-title { font-weight: 600; font-size: 1.3rem; display: block; margin-bottom: 5px; }
-        .entry-date { font-size: 0.75rem; opacity: 0.4; text-transform: uppercase; letter-spacing: 1px; }
+        .entry-date { font-size: 0.75rem; opacity: 0.3; text-transform: uppercase; letter-spacing: 1px; }
 
-        #bottomControls { position: fixed; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 1000; }
         #loginPopup { 
             display: none; position: absolute; bottom: 80px; background: rgba(10, 10, 10, 0.95); 
-            backdrop-filter: blur(20px); border: 1px solid #333; 
-            padding: 25px; border-radius: 25px; flex-direction: column; gap: 12px; width: 280px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            backdrop-filter: blur(20px); border: 1px solid #333; padding: 25px; border-radius: 25px; 
+            flex-direction: column; gap: 12px; width: 280px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
+        #loginPopup input { padding: 12px; border-radius: 12px; border: none; background: #000; color: white; }
     </style>
 </head>
 <body>
@@ -130,9 +55,11 @@
     <div class="title-header"><h1>iku's journal</h1></div>
     
     <div class="journal-container">
-        <div id="editorArea" style="display:none; margin-bottom: 60px; text-align: center;">
-            <textarea id="note" style="width:100%; height:180px; border-radius:24px; background:rgba(255,255,255,0.03); color:white; padding:25px; border:1px solid rgba(255,255,255,0.1); outline:none; font-size: 16px;" placeholder="Write your story..."></textarea>
-            <button id="saveBtn" class="icon-btn" style="margin-top:20px; width:100%; height: 55px;">POST ENTRY</button>
+        <div id="editorArea" style="display:none; margin-bottom: 60px; padding: 0 20px;">
+            <div style="max-width: 800px; margin: 0 auto;">
+                <textarea id="note" style="width:100%; height:180px; border-radius:24px; background:rgba(255,255,255,0.03); color:white; padding:25px; border:1px solid rgba(255,255,255,0.1); outline:none; font-size: 16px;" placeholder="Headline...&#10;&#10;Your story..."></textarea>
+                <button id="saveBtn" class="icon-btn" style="margin-top:20px; width:100%;">POST ENTRY</button>
+            </div>
         </div>
 
         <div id="entries"><p id="loadingMsg">connecting to the void...</p></div>
@@ -142,8 +69,8 @@
         <a class="icon-btn" href="index.html">🏠 HOME</a>
         <button id="showLoginBtn" class="lock-btn">🔒</button>
         <div id="loginPopup">
-            <input type="email" id="emailInput" placeholder="email" style="padding:12px; border-radius:12px; border:none; background:#000; color:white;">
-            <input type="password" id="passInput" placeholder="password" style="padding:12px; border-radius:12px; border:none; background:#000; color:white;">
+            <input type="email" id="emailInput" placeholder="email">
+            <input type="password" id="passInput" placeholder="password">
             <button id="performLoginBtn" style="background:white; color:black; padding:12px; border-radius:12px; font-weight:bold; cursor:pointer; border:none;">SIGN IN</button>
         </div>
     </div>
@@ -151,7 +78,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g", 
@@ -188,23 +115,24 @@
                         <span class="entry-title">${title}</span>
                         <span class="entry-date">${new Date(entry.date).toLocaleDateString()}</span>
                         <div class="entry-content">${body || '...'}</div>
-                        ${isAdmin ? '<button class="delete-trigger" style="color:#ff5555; margin-top:15px; background:rgba(255,0,0,0.1); border:none; padding:8px 15px; border-radius:10px; cursor:pointer; font-size:11px; font-weight:bold;">DELETE</button>' : ''}
+                        ${isAdmin ? '<button class="del-trigger" style="color:#ff5555; background:none; border:none; margin-top:15px; cursor:pointer; font-size:10px;">[ DELETE ]</button>' : ''}
                     `;
 
                     div.onclick = (e) => {
-                        if (e.target.className === 'delete-trigger') return;
+                        if (e.target.className === 'del-trigger') return;
                         div.classList.toggle('expanded');
                     };
 
                     if (isAdmin) {
-                        div.querySelector('.delete-trigger').onclick = () => {
-                            if(confirm("Permanently delete this entry?")) remove(ref(db, `entries/${key}`));
+                        div.querySelector('.del-trigger').onclick = (e) => {
+                            e.stopPropagation();
+                            if(confirm("Delete entry?")) remove(ref(db, `entries/${key}`));
                         };
                     }
                     list.appendChild(div);
                 });
             } else {
-                list.innerHTML = '<p style="opacity:0.3;">The void is currently empty.</p>';
+                list.innerHTML = '<p style="opacity:0.2;">The void is empty.</p>';
             }
         });
 
@@ -217,7 +145,7 @@
             try {
                 await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value);
                 document.getElementById('loginPopup').style.display = 'none';
-            } catch (e) { alert("Invalid access."); }
+            } catch (e) { alert("Denied."); }
         };
 
         document.getElementById('saveBtn').onclick = () => {
