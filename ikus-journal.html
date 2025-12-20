@@ -13,17 +13,14 @@
 
         .journal-container { max-width: 1400px; margin: 0 auto; }
 
-        /* Smooth Press-to-Expand with Paragraph Support */
+        /* Paragraph support and Smooth Unrolling */
         .entry-content {
             max-height: 0;
             opacity: 0;
             overflow: hidden;
             margin-top: 0;
-            
-            /* THIS KEEPS YOUR PARAGRAPHS */
             white-space: pre-wrap; 
             overflow-wrap: break-word;
-
             font-family: 'Georgia', serif;
             line-height: 1.8;
             color: rgba(255,255,255,0.7);
@@ -34,10 +31,12 @@
             flex-basis: 100% !important;
             max-width: 1100px;
             cursor: default;
+            /* Leaves space at the top when scrolling into view */
+            scroll-margin-top: 50px; 
         }
 
         .journal-entry.expanded .entry-content {
-            max-height: 3000px; /* Increased to allow long stories */
+            max-height: 5000px; 
             opacity: 1;
             margin-top: 20px;
             padding-top: 20px;
@@ -125,7 +124,15 @@
 
                     div.onclick = (e) => {
                         if (e.target.className === 'del-trigger') return;
-                        div.classList.toggle('expanded');
+                        
+                        const isExpanded = div.classList.toggle('expanded');
+                        
+                        // AUTO-SCROLL LOGIC
+                        if (isExpanded) {
+                            setTimeout(() => {
+                                div.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }, 150); // Delay to match the start of the expansion animation
+                        }
                     };
 
                     if (isAdmin) {
