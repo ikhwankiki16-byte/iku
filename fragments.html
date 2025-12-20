@@ -5,17 +5,23 @@
     <title>fragments | iku</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        body { overflow: hidden; height: 100vh; }
+        body { overflow: hidden; height: 100vh; width: 100vw; }
         .fragment-text {
-            position: absolute; color: rgba(255, 255, 255, 0.4);
-            font-family: 'Georgia', serif; font-style: italic;
-            white-space: nowrap; cursor: default; user-select: none;
-            z-index: 10; will-change: transform;
+            position: absolute;
+            color: rgba(255, 255, 255, 0.4);
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            white-space: nowrap;
+            cursor: default;
+            user-select: none;
+            z-index: 10;
+            will-change: transform;
         }
     </style>
 </head>
 <body>
     <div id="void"></div>
+
     <div id="bottomControls">
         <a class="icon-btn" href="index.html">🏠 HOME</a>
     </div>
@@ -43,15 +49,22 @@
             const data = snapshot.val();
             if (!data) return;
             container.innerHTML = '';
+            wordsArray = [];
             let text = "";
             Object.values(data).forEach(e => text += " " + e.text);
-            const words = [...new Set(text.split(/\s+/))].filter(w => w.length > 3).slice(0, 40);
+            const words = [...new Set(text.split(/\s+/))].filter(w => w.length > 3).slice(0, 45);
 
             words.forEach(word => {
                 const el = document.createElement('div');
                 el.className = 'fragment-text';
                 el.innerText = word;
-                const obj = { el, x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, vx: Math.random()-0.5, vy: Math.random()-0.5 };
+                const obj = { 
+                    el, 
+                    x: Math.random() * window.innerWidth, 
+                    y: Math.random() * window.innerHeight, 
+                    vx: (Math.random() - 0.5) * 0.4, 
+                    vy: (Math.random() - 0.5) * 0.4 
+                };
                 container.appendChild(el);
                 wordsArray.push(obj);
             });
@@ -63,7 +76,9 @@
                 const dx = w.x - mouse.x, dy = w.y - mouse.y;
                 const dist = Math.sqrt(dx*dx + dy*dy);
                 if (dist < 150) {
-                    w.x += dx/10; w.y += dy/10;
+                    const angle = Math.atan2(dy, dx);
+                    w.x += Math.cos(angle) * 6;
+                    w.y += Math.sin(angle) * 6;
                 }
                 if (w.x > window.innerWidth) w.x = 0; if (w.x < 0) w.x = window.innerWidth;
                 if (w.y > window.innerHeight) w.y = 0; if (w.y < 0) w.y = window.innerHeight;
