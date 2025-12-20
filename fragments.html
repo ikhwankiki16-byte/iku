@@ -1,158 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/svg" href="iku.svg">
-  <link rel="stylesheet" href="style.css">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#050505">
-  <title>iku's fragments</title>
-  <style>
-    /* CRITICAL: Ensures browser UI bars and corners remain deep black */
-    html { background-color: #000000; }
-    
-    body {
-      margin: 0; 
-      overflow: hidden; 
-      background-color: #000000;
-      color: white; 
-      font-family: 'Courier New', monospace; /* Courier for fragments only */
-      height: 100vh; 
-      width: 100vw;
-    }
+    <link rel="icon" type="image/svg+xml" href="iku.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fragments | iku</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Specific layout for the fragments content */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-    #void { position: fixed; inset: 0; z-index: 1; }
-    
-    .fragment { 
-      position: absolute; 
-      white-space: nowrap; 
-      pointer-events: none; 
-      color: rgba(255,255,255,0.6); 
-    }
+        .fragments-container {
+            padding: 120px 20px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
 
-    /* Fixed Button Container */
-    #bottomControls {
-      position: fixed; 
-      bottom: 30px; 
-      left: 0; 
-      right: 0;
-      display: flex; 
-      justify-content: center; 
-      z-index: 1000;
-      padding: 0 16px;
-    }
+        .fragment-header {
+            font-weight: 100;
+            letter-spacing: 12px;
+            opacity: 0.4;
+            text-transform: uppercase;
+            margin-bottom: 60px;
+        }
 
-    .icon-btn {
-      background: white; 
-      color: black; 
-      border-radius: 20px;
-      font-weight: 800; 
-      display: inline-flex; 
-      align-items: center;
-      justify-content: center;
-      text-decoration: none; 
-      height: 48px; 
-      width: 145px; /* Sync width with Index */
-      gap: 8px;
-      /* FIX: Explicitly forcing Arial to match Index.html */
-      font-family: Arial, sans-serif !important; 
-      font-size: 0.9rem;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-      transition: transform 0.2s ease;
-    }
+        .fragment-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 40px;
+            border-radius: 40px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
 
-    .icon-btn:active { transform: scale(0.95); }
-  </style>
+        .fragment-item:hover {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        p {
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
-  <div id="void"></div>
 
-  <div id="bottomControls">
-    <a class="icon-btn" href="index.html">
-      <span>🏠</span><span>HOME</span>
-    </a>
-  </div>
+    <div class="fragments-container">
+        <h1 class="fragment-header">Fragments</h1>
+        
+        <div class="fragment-item">
+            <p>"Memory is a ghost that refuses to leave the room."</p>
+        </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    
-    const firebaseConfig = { 
-      apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g", 
-      databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app", 
-      projectId: "iku-website-iku" 
-    };
-    
-    const app = initializeApp(firebaseConfig); 
-    const db = getDatabase(app);
-    const container = document.getElementById('void'); 
-    let fragments = []; 
-    let audioCtx;
+        <div class="fragment-item">
+            <p>"The stars are just holes in the ceiling of the void."</p>
+        </div>
+    </div>
 
-    function playChime(freq) {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator(); 
-      const gain = audioCtx.createGain();
-      osc.type = 'sine'; 
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0, audioCtx.currentTime); 
-      gain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.5);
-      osc.connect(gain); 
-      gain.connect(audioCtx.destination); 
-      osc.start(); 
-      osc.stop(audioCtx.currentTime + 1.5);
-    }
+    <div id="bottomControls">
+        <a class="icon-btn" href="index.html">🏠 HOME</a>
+        <a class="icon-btn" href="ikus-journal.html">📓 JOURNAL</a>
+    </div>
 
-    onValue(ref(db, 'entries'), (s) => {
-      const data = s.val(); 
-      if (data) {
-        let words = []; 
-        Object.values(data).forEach(e => words = words.concat(e.text.split(/\s+/)));
-        container.innerHTML = ''; 
-        fragments = [];
-        for (let i = 0; i < Math.min(words.length, 40); i++) {
-          const div = document.createElement('div'); 
-          div.className = 'fragment';
-          div.textContent = words[Math.floor(Math.random() * words.length)];
-          const f = { 
-            el: div, 
-            x: Math.random() * window.innerWidth, 
-            y: Math.random() * window.innerHeight, 
-            vx: (Math.random()-0.5)*0.3, 
-            vy: (Math.random()-0.5)*0.3, 
-            lastP: 0 
-          };
-          fragments.push(f); 
-          container.appendChild(div);
-        }
-      }
-    });
-
-    let mx = -1000, my = -1000; 
-    window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
-    
-    function animate() {
-      fragments.forEach(f => {
-        f.x += f.vx; 
-        f.y += f.vy; 
-        const dx = mx - f.x, dy = my - f.y, dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < 120) { 
-          f.x -= dx * 0.05; 
-          f.y -= dy * 0.05; 
-          if (Date.now() - f.lastP > 1000) { 
-            playChime(200 + (window.innerHeight - f.y) * 0.8); 
-            f.lastP = Date.now(); 
-          } 
-        }
-        if (f.x < -100) f.x = window.innerWidth; 
-        if (f.x > window.innerWidth) f.x = -100;
-        f.el.style.transform = `translate(${f.x}px, ${f.y}px)`;
-      });
-      requestAnimationFrame(animate);
-    }
-    animate();
-  </script>
 </body>
 </html>
