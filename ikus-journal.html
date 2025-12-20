@@ -21,12 +21,20 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding-top: 50px;
+            padding-top: 40px;
             color: white;
             background: transparent !important; 
         }
 
-        /* 2. JOURNAL ENTRIES */
+        /* 2. LOGO STYLING */
+        .journal-logo {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        /* 3. JOURNAL ENTRIES */
         #entries {
             width: 90%;
             max-width: 600px;
@@ -41,13 +49,16 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
             cursor: pointer;
+            transition: transform 0.2s ease;
         }
+
+        .journal-entry:active { transform: scale(0.99); }
 
         .entry-title { font-weight: 800; font-size: 1.1rem; display: block; }
         .entry-content { display: none; margin-top: 15px; color: #ccc; white-space: pre-wrap; }
         .expanded .entry-content { display: block; }
 
-        /* 3. DELETE BUTTON (Hidden by default) */
+        /* 4. ADMIN TOOLS */
         .delete-btn {
             display: none;
             position: absolute;
@@ -60,10 +71,8 @@
             cursor: pointer;
             opacity: 0.6;
         }
-        .delete-btn:hover { opacity: 1; }
         .is-admin .delete-btn { display: block; }
 
-        /* 4. ADMIN WRITING AREA */
         #editorArea {
             display: none;
             width: 90%;
@@ -103,7 +112,6 @@
             z-index: 9999;
             flex-direction: column;
             gap: 10px;
-            box-shadow: 0 0 40px rgba(0,0,0,0.8);
         }
         #loginPopup.open { display: flex; }
 
@@ -112,13 +120,26 @@
             border-radius: 20px; font-weight: bold; cursor: pointer; margin-top: 10px;
         }
 
-        #logoutBtn { display: none; margin-left: 10px; background: #ff4d4d; color: white; border-radius: 50px; padding: 0 15px; height: 48px; border: none; font-weight: 800; cursor: pointer; }
+        #logoutBtn { 
+            display: none; 
+            margin-left: 10px; 
+            background: #ff4d4d; 
+            color: white; 
+            border-radius: 50px; 
+            padding: 0 15px; 
+            height: 48px; 
+            border: none; 
+            font-weight: 800; 
+            cursor: pointer; 
+        }
     </style>
 </head>
 <body id="mainBody">
 
+    <img src="iku.svg" alt="iku" class="journal-logo">
+
     <div id="editorArea">
-        <textarea id="note" placeholder="What's on your mind?"></textarea><br>
+        <textarea id="note" placeholder="Write into the void..."></textarea><br>
         <button id="saveBtn" class="post-btn">POST ENTRY</button>
     </div>
 
@@ -173,19 +194,16 @@
             }
         });
 
-        // Logout
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
-
-        // Login
         document.getElementById('showLoginBtn').onclick = () => document.getElementById('loginPopup').classList.add('open');
         document.getElementById('performLoginBtn').onclick = async () => {
             try {
                 await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value);
                 document.getElementById('loginPopup').classList.remove('open');
-            } catch (e) { alert("Wrong password."); }
+            } catch (e) { alert("Fail"); }
         };
 
-        // Render Entries with Delete Feature
+        // Render Entries
         onValue(ref(db, 'entries'), (snapshot) => {
             const list = document.getElementById('entries');
             list.innerHTML = '';
@@ -200,25 +218,17 @@
                         <span class="entry-title">${entry.text.split('\n')[0]}</span>
                         <div class="entry-content">${entry.text}</div>
                     `;
-                    
-                    // Click to expand (ignore if clicking delete)
                     div.onclick = (e) => {
                         if (!e.target.classList.contains('delete-btn')) div.classList.toggle('expanded');
                     };
-
-                    // Delete Logic
                     div.querySelector('.delete-btn').onclick = () => {
-                        if(confirm("Delete this memory forever?")) {
-                            remove(ref(db, `entries/${key}`));
-                        }
+                        if(confirm("Delete entry?")) remove(ref(db, `entries/${key}`));
                     };
-
                     list.appendChild(div);
                 });
             }
         });
 
-        // Save Entry
         document.getElementById('saveBtn').onclick = () => {
             const val = document.getElementById('note').value;
             if(val.trim()) {
