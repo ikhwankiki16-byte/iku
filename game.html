@@ -27,7 +27,7 @@
             height: 100vh; 
             overflow: hidden; 
             background: transparent !important;
-            position: fixed; /* Prevents mobile bounce */
+            position: fixed; 
             width: 100%;
         }
 
@@ -39,7 +39,7 @@
             max-height: 65vh;
             cursor: pointer;
             z-index: 10;
-            touch-action: none; /* Prevents scrolling while playing */
+            touch-action: none;
         }
 
         h1 { 
@@ -51,13 +51,11 @@
             font-family: sans-serif;
         }
 
-        #bottomControls {
-            z-index: 100;
-        }
+        #bottomControls { z-index: 100; }
     </style>
 </head>
 <body>
-    <h1>VOID RUNNER</h1>
+    <h1 id="title">VOID RUNNER</h1>
     <canvas id="gameCanvas"></canvas>
     
     <div id="bottomControls">
@@ -72,28 +70,79 @@
         
         let playerY = 200; 
         let isStarted = false;
+        let isGameOver = false;
+        let score = 0;
+        let obstacles = [];
+        let frameCount = 0;
 
-        // Unified Jump Function
         function jump(e) {
-            e.preventDefault();
+            if(e) e.preventDefault();
+            if (isGameOver) {
+                resetGame();
+                return;
+            }
             isStarted = true; 
-            playerY -= 60;
+            playerY -= 70;
         }
 
-        // Mouse and Touch listeners
+        function resetGame() {
+            playerY = 200;
+            isStarted = false;
+            isGameOver = false;
+            score = 0;
+            obstacles = [];
+            frameCount = 0;
+            document.getElementById('title').innerText = "VOID RUNNER";
+        }
+
         canvas.addEventListener('mousedown', jump);
         canvas.addEventListener('touchstart', jump, { passive: false });
 
         function loop() {
-            // Motion blur effect
-            ctx.fillStyle = "rgba(0,0,0,0.3)";
+            // Background & Motion Blur
+            ctx.fillStyle = "rgba(0,0,0,0.4)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Gravity
-            if (isStarted) {
-                if (playerY < canvas.height - 40) playerY += 3;
-                if (playerY < 10) playerY = 10;
+            if (isStarted && !isGameOver) {
+                // Gravity
+                playerY += 4;
+                if (playerY < 0) playerY = 0;
+                if (playerY > canvas.height - 30) isGameOver = true;
+
+                // Spawn Obstacles
+                if (frameCount % 90 === 0) {
+                    let gap = 150;
+                    let minH = 50;
+                    let h = Math.random() * (canvas.height - gap - (minH * 2)) + minH;
+                    obstacles.push({ x: canvas.width, y: 0, w: 40, h: h }); // Top
+                    obstacles.push({ x: canvas.width, y: h + gap, w: 40, h: canvas.height }); // Bottom
+                }
+
+                // Update Obstacles
+                for (let i = obstacles.length - 1; i >= 0; i--) {
+                    obstacles[i].x -= 5;
+                    
+                    // Collision check
+                    if (100 < obstacles[i].x + obstacles[i].w &&
+                        100 + 30 > obstacles[i].x &&
+                        playerY < obstacles[i].y + obstacles[i].h &&
+                        playerY + 30 > obstacles[i].y) {
+                        isGameOver = true;
+                    }
+
+                    // Score tracking (using top obstacles only)
+                    if (obstacles[i].y === 0 && obstacles[i].x === 100) {
+                        score++;
+                    }
+
+                    if (obstacles[i].x + obstacles[i].w < 0) obstacles.splice(i, 1);
+                }
+                frameCount++;
             }
+
+            // Draw Obstacles
+            ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+            obstacles.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
 
             // Draw Player with Neon Glow
             ctx.shadowBlur = 15; 
@@ -102,18 +151,23 @@
             ctx.fillRect(100, playerY, 30, 30);
             ctx.shadowBlur = 0;
 
-            // Start Text
-            if(!isStarted) {
-                ctx.fillStyle = "white"; 
-                ctx.font = "18px Arial"; 
-                ctx.textAlign = "center";
-                ctx.fillText("CLICK OR TAP TO JUMP", canvas.width/2, canvas.height/2);
+            // UI Text
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            ctx.font = "20px Arial";
+
+            if(!isStarted && !isGameOver) {
+                ctx.fillText("TAP TO JUMP", canvas.width/2, canvas.height/2);
+            } else if (isGameOver) {
+                document.getElementById('title').innerText = "FINAL SCORE: " + score;
+                ctx.fillText("CRASHED. TAP TO RESTART", canvas.width/2, canvas.height/2);
+            } else {
+                ctx.fillText(score, canvas.width/2, 40);
             }
             
             requestAnimationFrame(loop);
         }
 
-        // Prevent mobile pull-to-refresh on the whole page
         document.addEventListener('touchmove', (e) => {
             if(e.touches.length <= 1) e.preventDefault();
         }, { passive: false });
