@@ -1,81 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="iku.svg">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>iku's journal</title>
     <link rel="stylesheet" href="style.css">
-    
     <style>
         body { display: block; }
-        .title-header { text-align: center; padding: 80px 20px 40px; position: relative; z-index: 10; }
-        h1 { font-weight: 200; letter-spacing: 8px; opacity: 0.8; margin: 0; }
-
+        .title-header { text-align: center; padding: 80px 20px 40px; }
         .entry-content {
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            white-space: pre-wrap; 
-            overflow-wrap: break-word;
-            font-family: 'Georgia', serif;
-            line-height: 1.8;
-            color: rgba(255,255,255,0.7);
-            transition: max-height 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease;
+            max-height: 0; opacity: 0; overflow: hidden;
+            white-space: pre-wrap; /* Keeps your paragraphs! */
+            font-family: 'Georgia', serif; line-height: 1.8;
+            transition: 0.6s ease;
         }
-
-        .journal-entry.expanded {
-            flex-basis: 100% !important;
-            max-width: 1100px;
-            scroll-margin-top: 50px;
-        }
-
         .journal-entry.expanded .entry-content {
-            max-height: 5000px; 
-            opacity: 1;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            max-height: 2000px; opacity: 1; margin-top: 20px;
         }
-
-        .entry-title { font-weight: 600; font-size: 1.4rem; display: block; color: #fff; }
-        .entry-date { font-size: 0.75rem; opacity: 0.3; text-transform: uppercase; }
-
-        #loginPopup { 
-            display: none; position: absolute; bottom: 80px; background: rgba(10, 10, 10, 0.95); 
-            backdrop-filter: blur(20px); border: 1px solid #333; padding: 25px; border-radius: 25px; 
-            flex-direction: column; gap: 12px; width: 280px; z-index: 3000;
-        }
-        #loginPopup input { padding: 12px; border-radius: 12px; border: none; background: #000; color: white; outline: none; }
+        .journal-entry.expanded { flex-basis: 100% !important; max-width: 1000px; }
     </style>
 </head>
 <body>
-
     <div class="title-header"><h1>iku's journal</h1></div>
-    
-    <div id="editorArea" style="display:none; margin-bottom: 60px; padding: 0 20px; position: relative; z-index: 20;">
-        <div style="max-width: 800px; margin: 0 auto;">
-            <textarea id="note" style="width:100%; height:200px; border-radius:24px; background:rgba(255,255,255,0.03); color:white; padding:25px; border:1px solid rgba(255,255,255,0.1); outline:none;" placeholder="Write..."></textarea>
-            <button id="saveBtn" class="icon-btn" style="margin-top:20px; width:100%;">POST</button>
-        </div>
-    </div>
-
-    <div id="entries"><p id="loadingMsg" style="text-align:center; opacity:0.5;">connecting...</p></div>
+    <div id="entries"></div>
 
     <div id="bottomControls">
         <a class="icon-btn" href="index.html">🏠 HOME</a>
         <button id="showLoginBtn" class="lock-btn">🔒</button>
-        <div id="loginPopup">
-            <input type="email" id="emailInput" placeholder="email">
-            <input type="password" id="passInput" placeholder="password">
-            <button id="performLoginBtn" style="background:white; color:black; padding:12px; border-radius:12px; font-weight:bold; border:none;">SIGN IN</button>
-        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g", 
@@ -86,74 +42,31 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const auth = getAuth(app);
-        let isAdmin = false;
-
-        onAuthStateChanged(auth, (user) => {
-            isAdmin = !!user;
-            document.getElementById('editorArea').style.display = isAdmin ? 'block' : 'none';
-            document.getElementById('showLoginBtn').innerHTML = isAdmin ? '🔓' : '🔒';
-        });
 
         onValue(ref(db, 'entries'), (snapshot) => {
             const list = document.getElementById('entries');
-            list.innerHTML = ''; 
+            list.innerHTML = '';
             const data = snapshot.val();
             if (data) {
                 Object.keys(data).reverse().forEach(key => {
                     const entry = data[key];
-                    const lines = entry.text.split('\n');
-                    const title = lines[0];
-                    const body = lines.slice(1).join('\n').trim();
-
                     const div = document.createElement('div');
                     div.className = 'journal-entry';
                     div.innerHTML = `
-                        <span class="entry-title">${title}</span>
-                        <span class="entry-date">${new Date(entry.date).toLocaleDateString()}</span>
-                        <div class="entry-content">${body || '...'}</div>
-                        ${isAdmin ? '<button class="del-trigger" style="color:#ff5555; background:none; border:none; margin-top:10px; cursor:pointer;">[ DELETE ]</button>' : ''}
+                        <div style="font-weight:bold; font-size:1.4rem;">${entry.text.split('\n')[0]}</div>
+                        <div style="opacity:0.3; font-size:0.8rem;">${new Date(entry.date).toLocaleDateString()}</div>
+                        <div class="entry-content">${entry.text.split('\n').slice(1).join('\n')}</div>
                     `;
-
-                    div.onclick = (e) => {
-                        if (e.target.className === 'del-trigger') return;
-                        if (div.classList.toggle('expanded')) {
-                            setTimeout(() => div.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+                    div.onclick = () => {
+                        div.classList.toggle('expanded');
+                        if(div.classList.contains('expanded')) {
+                            setTimeout(() => div.scrollIntoView({behavior:'smooth', block:'start'}), 100);
                         }
                     };
-
-                    if (isAdmin) {
-                        div.querySelector('.del-trigger').onclick = (e) => {
-                            e.stopPropagation();
-                            if(confirm("Delete?")) remove(ref(db, `entries/${key}`));
-                        };
-                    }
                     list.appendChild(div);
                 });
-            } else {
-                list.innerHTML = '<p style="text-align:center; opacity:0.2;">The void is empty.</p>';
             }
         });
-
-        document.getElementById('showLoginBtn').onclick = () => {
-            const p = document.getElementById('loginPopup');
-            p.style.display = (p.style.display === 'flex') ? 'none' : 'flex';
-        };
-
-        document.getElementById('performLoginBtn').onclick = async () => {
-            try {
-                await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value);
-                document.getElementById('loginPopup').style.display = 'none';
-            } catch (e) { alert("Denied."); }
-        };
-
-        document.getElementById('saveBtn').onclick = () => {
-            const ta = document.getElementById('note');
-            if (ta.value.trim()) {
-                push(ref(db, 'entries'), { date: new Date().toISOString(), text: ta.value });
-                ta.value = '';
-            }
-        };
     </script>
 </body>
 </html>
