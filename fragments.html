@@ -8,67 +8,57 @@
     <link rel="stylesheet" href="style.css">
     <style>
         body {
-            overflow: hidden; /* Prevents scrollbars while fragments float */
+            overflow: hidden; /* No scrollbars for floating page */
             height: 100vh;
             width: 100vw;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
-        .void-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            z-index: 5;
-        }
-
-        /* The Floating Words */
-        .fragment {
+        .void-background {
             position: absolute;
-            color: rgba(255, 255, 255, 0.4);
+            inset: 0;
+            z-index: 1;
+        }
+
+        /* Floating Text Style */
+        .fragment-text {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.3);
             font-family: 'Georgia', serif;
             font-style: italic;
             white-space: nowrap;
-            user-select: none;
             cursor: default;
+            user-select: none;
             filter: blur(1px);
-            transition: color 0.5s, filter 0.5s, opacity 0.5s;
-            animation: drift linear infinite;
+            transition: all 0.8s ease;
+            z-index: 5;
         }
 
-        .fragment:hover {
+        .fragment-text:hover {
             color: rgba(255, 255, 255, 1);
             filter: blur(0px);
-            opacity: 1 !important;
+            transform: scale(1.1);
             z-index: 100;
         }
 
-        /* Animation for drifting around */
-        @keyframes drift {
-            from { transform: translate(0, 0) rotate(0deg); }
-            to { transform: translate(var(--x), var(--y)) rotate(var(--r)); }
-        }
-
-        .fragment-title {
+        h1.bg-title {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             font-weight: 100;
-            letter-spacing: 20px;
-            opacity: 0.2;
+            letter-spacing: 25px;
+            opacity: 0.1;
             text-transform: uppercase;
             pointer-events: none;
+            z-index: 2;
         }
     </style>
 </head>
 <body>
 
-    <h1 class="fragment-title">Fragments</h1>
+    <h1 class="bg-title">Fragments</h1>
 
-    <div class="void-container" id="void">
+    <div class="void-background" id="void">
         </div>
 
     <div id="bottomControls">
@@ -77,59 +67,57 @@
     </div>
 
     <script>
-        const fragmentsData = [
-            "echoes in the dark",
-            "shattered memories",
-            "the weight of silence",
-            "drifting alone",
-            "lost in thought",
-            "fragments of a dream",
-            "a quiet storm",
-            "the edge of the void",
-            "nothing is permanent",
-            "fleeting moments"
+        const words = [
+            "fleeting", "echoes", "hollow", "drifting", "lost", 
+            "shattered", "silent", "void", "memory", "shadows",
+            "whisper", "cold", "distant", "broken", "empty"
         ];
 
-        const voidContainer = document.getElementById('void');
+        const container = document.getElementById('void');
 
-        function createFragment(text) {
-            const div = document.createElement('div');
-            div.className = 'fragment';
-            div.innerText = text;
+        function spawnWord(text) {
+            const el = document.createElement('div');
+            el.className = 'fragment-text';
+            el.innerText = text;
 
-            // Randomize starting position
-            const startX = Math.random() * window.innerWidth;
-            const startY = Math.random() * window.innerHeight;
+            // Random positions
+            let posX = Math.random() * window.innerWidth;
+            let posY = Math.random() * window.innerHeight;
             
-            // Randomize movement distance
-            const moveX = (Math.random() - 0.5) * 200 + "px";
-            const moveY = (Math.random() - 0.5) * 200 + "px";
-            const rotation = (Math.random() - 0.5) * 45 + "deg";
-            
-            // Randomize speed
-            const duration = 15 + Math.random() * 20 + "s";
-            
-            div.style.left = startX + "px";
-            div.style.top = startY + "px";
-            div.style.opacity = 0.1 + Math.random() * 0.4;
-            div.style.fontSize = (14 + Math.random() * 18) + "px";
-            
-            // Set CSS variables for the animation
-            div.style.setProperty('--x', moveX);
-            div.style.setProperty('--y', moveY);
-            div.style.setProperty('--r', rotation);
-            
-            div.style.animationDuration = duration;
-            div.style.animationDirection = "alternate";
+            // Random movement speeds
+            let velX = (Math.random() - 0.5) * 0.5;
+            let velY = (Math.random() - 0.5) * 0.5;
 
-            voidContainer.appendChild(div);
+            el.style.left = posX + 'px';
+            el.style.top = posY + 'px';
+            el.style.fontSize = (Math.random() * 20 + 14) + 'px';
+            el.style.opacity = Math.random() * 0.5 + 0.1;
+
+            container.appendChild(el);
+
+            // Animation Loop for each word
+            function move() {
+                posX += velX;
+                posY += velY;
+
+                // Wrap around screen
+                if (posX > window.innerWidth) posX = -100;
+                if (posX < -100) posX = window.innerWidth;
+                if (posY > window.innerHeight) posY = -50;
+                if (posY < -50) posY = window.innerHeight;
+
+                el.style.left = posX + 'px';
+                el.style.top = posY + 'px';
+
+                requestAnimationFrame(move);
+            }
+            move();
         }
 
-        // Spawn fragments
-        fragmentsData.forEach(text => createFragment(text));
-
-        // Re-spawn some more for density
-        fragmentsData.forEach(text => createFragment(text));
+        // Create multiple copies for a full "Void" look
+        for (let i = 0; i < 3; i++) {
+            words.forEach(w => spawnWord(w));
+        }
     </script>
 </body>
 </html>
