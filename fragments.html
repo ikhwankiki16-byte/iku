@@ -25,14 +25,14 @@
             overflow: hidden; 
             height: 100vh; 
             width: 100vw;
-            position: fixed; /* Prevents elastic scrolling on mobile */
+            position: fixed; 
         }
 
         #void { 
             width: 100vw; 
             height: 100vh; 
             position: relative; 
-            background-color: #000000; /* Safety net while loading */
+            background-color: #000000;
         }
 
         .fragment-text {
@@ -47,7 +47,6 @@
             will-change: transform;
         }
 
-        /* Ensuring bottom controls are visible over the void */
         #bottomControls {
             z-index: 100;
         }
@@ -77,13 +76,7 @@
         let wordsArray = [];
         let mouse = { x: -1000, y: -1000 };
 
-        // Mouse Move
-        window.onmousemove = (e) => { 
-            mouse.x = e.clientX; 
-            mouse.y = e.clientY; 
-        };
-
-        // Touch support for mobile dodging
+        window.onmousemove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY; };
         window.ontouchmove = (e) => {
             mouse.x = e.touches[0].clientX;
             mouse.y = e.touches[0].clientY;
@@ -97,7 +90,6 @@
             let text = "";
             Object.values(data).forEach(e => text += " " + e.text);
             
-            // Generate unique word set
             const words = [...new Set(text.split(/\s+/))]
                           .filter(w => w.length > 3)
                           .slice(0, 45);
@@ -111,7 +103,8 @@
                     x: Math.random() * window.innerWidth, 
                     y: Math.random() * window.innerHeight, 
                     vx: (Math.random() - 0.5) * 0.4, 
-                    vy: (Math.random() - 0.5) * 0.4 
+                    vy: (Math.random() - 0.5) * 0.4,
+                    rotation: (Math.random() - 0.5) * 30 // Random starting tilt
                 };
                 container.appendChild(el);
                 wordsArray.push(obj);
@@ -133,19 +126,18 @@
                     w.y += Math.sin(angle) * 6;
                 }
 
-                // Screen Wrap
                 if (w.x > window.innerWidth) w.x = 0; 
                 if (w.x < 0) w.x = window.innerWidth;
                 if (w.y > window.innerHeight) w.y = 0; 
                 if (w.y < 0) w.y = window.innerHeight;
                 
-                w.el.style.transform = `translate(${w.x}px, ${w.y}px)`;
+                // Rotation included in the transform
+                w.el.style.transform = `translate(${w.x}px, ${w.y}px) rotate(${w.rotation}deg)`;
             });
             requestAnimationFrame(animate);
         }
         animate();
 
-        // Prevent mobile pull-to-refresh
         document.addEventListener('touchmove', (e) => {
             if(e.touches.length <= 1) e.preventDefault();
         }, { passive: false });
