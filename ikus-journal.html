@@ -1,27 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/svg+xml" href="iku.svg">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>iku's journal</title>
     <link rel="stylesheet" href="style.css">
     <style>
         body { display: block; }
-        .title-header { text-align: center; padding: 80px 20px 40px; }
+        .title-header { text-align: center; padding: 80px 20px 40px; position: relative; z-index: 10; }
+        h1 { font-weight: 200; letter-spacing: 8px; opacity: 0.8; margin: 0; }
+
+        /* Journal Entries */
         .entry-content {
             max-height: 0; opacity: 0; overflow: hidden;
-            white-space: pre-wrap; /* Keeps your paragraphs! */
-            font-family: 'Georgia', serif; line-height: 1.8;
-            transition: 0.6s ease;
-        }
-        .journal-entry.expanded .entry-content {
-            max-height: 2000px; opacity: 1; margin-top: 20px;
+            white-space: pre-wrap; font-family: 'Georgia', serif;
+            line-height: 1.8; color: rgba(255,255,255,0.7);
+            transition: max-height 0.8s ease, opacity 0.5s ease;
         }
         .journal-entry.expanded { flex-basis: 100% !important; max-width: 1000px; }
+        .journal-entry.expanded .entry-content { max-height: 2000px; opacity: 1; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+
+        /* Login Popup Styling */
+        #loginPopup { 
+            display: none; /* Controlled by JS */
+            position: fixed; 
+            bottom: 100px; 
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 15, 15, 0.95); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            padding: 25px; 
+            border-radius: 30px; 
+            flex-direction: column; 
+            gap: 12px; 
+            width: 280px; 
+            z-index: 10000; /* Above everything */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        #loginPopup input { 
+            padding: 12px; border-radius: 12px; border: 1px solid #333; 
+            background: #000; color: white; outline: none; 
+        }
     </style>
 </head>
 <body>
+
     <div class="title-header"><h1>iku's journal</h1></div>
+    
+    <div id="editorArea" style="display:none; margin-bottom: 60px; padding: 0 20px; position: relative; z-index: 100;">
+        <div style="max-width: 800px; margin: 0 auto;">
+            <textarea id="note" style="width:100%; height:200px; border-radius:24px; background:rgba(255,255,255,0.03); color:white; padding:25px; border:1px solid rgba(255,255,255,0.1); outline:none;" placeholder="Write something..."></textarea>
+            <button id="saveBtn" class="icon-btn" style="margin-top:20px; width:100%;">POST ENTRY</button>
+        </div>
+    </div>
+
     <div id="entries"></div>
 
     <div id="bottomControls">
@@ -29,9 +63,16 @@
         <button id="showLoginBtn" class="lock-btn">🔒</button>
     </div>
 
+    <div id="loginPopup">
+        <input type="email" id="emailInput" placeholder="Email">
+        <input type="password" id="passInput" placeholder="Password">
+        <button id="performLoginBtn" style="background:white; color:black; padding:12px; border-radius:12px; font-weight:bold; border:none; cursor:pointer;">SIGN IN</button>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g", 
@@ -42,7 +83,49 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const auth = getAuth(app);
+        let isAdmin = false;
 
+        const loginPopup = document.getElementById('loginPopup');
+        const showLoginBtn = document.getElementById('showLoginBtn');
+
+        // 1. FIXED LOCK FUNCTION
+        showLoginBtn.onclick = (e) => {
+            e.stopPropagation(); // Prevents click from closing immediately
+            if (loginPopup.style.display === 'flex') {
+                loginPopup.style.display = 'none';
+            } else {
+                loginPopup.style.display = 'flex';
+            }
+        };
+
+        // Close popup if clicking outside
+        window.onclick = (e) => {
+            if (!loginPopup.contains(e.target) && e.target !== showLoginBtn) {
+                loginPopup.style.display = 'none';
+            }
+        };
+
+        // 2. AUTH STATE LOGIC
+        onAuthStateChanged(auth, (user) => {
+            isAdmin = !!user;
+            document.getElementById('editorArea').style.display = isAdmin ? 'block' : 'none';
+            showLoginBtn.innerHTML = isAdmin ? '🔓' : '🔒';
+        });
+
+        // 3. LOGIN ACTION
+        document.getElementById('performLoginBtn').onclick = async () => {
+            const email = document.getElementById('emailInput').value;
+            const pass = document.getElementById('passInput').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                loginPopup.style.display = 'none';
+            } catch (e) {
+                alert("Access Denied");
+            }
+        };
+
+        // 4. LOAD ENTRIES
         onValue(ref(db, 'entries'), (snapshot) => {
             const list = document.getElementById('entries');
             list.innerHTML = '';
@@ -56,17 +139,30 @@
                         <div style="font-weight:bold; font-size:1.4rem;">${entry.text.split('\n')[0]}</div>
                         <div style="opacity:0.3; font-size:0.8rem;">${new Date(entry.date).toLocaleDateString()}</div>
                         <div class="entry-content">${entry.text.split('\n').slice(1).join('\n')}</div>
+                        ${isAdmin ? '<button class="del-btn" style="color:red; background:none; border:none; margin-top:10px; cursor:pointer;">[DELETE]</button>' : ''}
                     `;
-                    div.onclick = () => {
+                    div.onclick = (e) => {
+                        if (e.target.className === 'del-btn') return;
                         div.classList.toggle('expanded');
-                        if(div.classList.contains('expanded')) {
-                            setTimeout(() => div.scrollIntoView({behavior:'smooth', block:'start'}), 100);
-                        }
                     };
+                    if (isAdmin) {
+                        div.querySelector('.del-btn').onclick = () => {
+                            if(confirm("Delete this?")) remove(ref(db, `entries/${key}`));
+                        };
+                    }
                     list.appendChild(div);
                 });
             }
         });
+
+        // 5. SAVE ENTRY
+        document.getElementById('saveBtn').onclick = () => {
+            const ta = document.getElementById('note');
+            if (ta.value.trim()) {
+                push(ref(db, 'entries'), { date: new Date().toISOString(), text: ta.value });
+                ta.value = '';
+            }
+        };
     </script>
 </body>
 </html>
