@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/svg" href="iku.svg">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
-    <title>iku's journal | admin</title>
+    <title>iku's journal</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* 1. OUTER BACKGROUND FIX */
+        /* 1. FORCE BLACK OUTER BACKGROUND */
         html { 
             background-color: #000000 !important; 
             margin: 0;
@@ -26,12 +27,12 @@
             background: transparent !important; 
         }
 
-        /* 2. LOGO STYLING */
+        /* 2. PAGE LOGO */
         .journal-logo {
             max-width: 120px;
             height: auto;
             margin-bottom: 30px;
-            opacity: 0.8;
+            opacity: 0.9;
         }
 
         /* 3. JOURNAL ENTRIES */
@@ -49,16 +50,16 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
             cursor: pointer;
-            transition: transform 0.2s ease;
+            transition: background 0.2s;
         }
 
-        .journal-entry:active { transform: scale(0.99); }
+        .journal-entry:hover { background: rgba(255, 255, 255, 0.08); }
 
         .entry-title { font-weight: 800; font-size: 1.1rem; display: block; }
-        .entry-content { display: none; margin-top: 15px; color: #ccc; white-space: pre-wrap; }
+        .entry-content { display: none; margin-top: 15px; color: #ccc; white-space: pre-wrap; line-height: 1.5; }
         .expanded .entry-content { display: block; }
 
-        /* 4. ADMIN TOOLS */
+        /* 4. ADMIN FEATURES */
         .delete-btn {
             display: none;
             position: absolute;
@@ -69,8 +70,9 @@
             color: #ff4d4d;
             font-size: 1.2rem;
             cursor: pointer;
-            opacity: 0.6;
+            opacity: 0.5;
         }
+        .delete-btn:hover { opacity: 1; }
         .is-admin .delete-btn { display: block; }
 
         #editorArea {
@@ -98,7 +100,7 @@
             box-sizing: border-box;
         }
 
-        /* 5. POPUPS & BUTTONS */
+        /* 5. UI CONTROLS */
         #loginPopup {
             display: none;
             position: fixed;
@@ -174,7 +176,7 @@
         const db = getDatabase(app);
         const auth = getAuth(app);
 
-        // UI Logic
+        // UI State Logic
         onAuthStateChanged(auth, (user) => {
             const body = document.getElementById('mainBody');
             const editor = document.getElementById('editorArea');
@@ -194,7 +196,10 @@
             }
         });
 
+        // Sign Out
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
+
+        // Sign In
         document.getElementById('showLoginBtn').onclick = () => document.getElementById('loginPopup').classList.add('open');
         document.getElementById('performLoginBtn').onclick = async () => {
             try {
@@ -203,7 +208,7 @@
             } catch (e) { alert("Fail"); }
         };
 
-        // Render Entries
+        // Render Entries with Delete Feature
         onValue(ref(db, 'entries'), (snapshot) => {
             const list = document.getElementById('entries');
             list.innerHTML = '';
@@ -214,21 +219,25 @@
                     const div = document.createElement('div');
                     div.className = 'journal-entry';
                     div.innerHTML = `
-                        <button class="delete-btn" data-id="${key}">🗑️</button>
+                        <button class="delete-btn">🗑️</button>
                         <span class="entry-title">${entry.text.split('\n')[0]}</span>
                         <div class="entry-content">${entry.text}</div>
                     `;
+                    
                     div.onclick = (e) => {
                         if (!e.target.classList.contains('delete-btn')) div.classList.toggle('expanded');
                     };
+
                     div.querySelector('.delete-btn').onclick = () => {
                         if(confirm("Delete entry?")) remove(ref(db, `entries/${key}`));
                     };
+
                     list.appendChild(div);
                 });
             }
         });
 
+        // Save Entry
         document.getElementById('saveBtn').onclick = () => {
             const val = document.getElementById('note').value;
             if(val.trim()) {
