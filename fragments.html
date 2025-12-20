@@ -7,72 +7,129 @@
     <title>fragments | iku</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Specific layout for the fragments content */
         body {
+            overflow: hidden; /* Prevents scrollbars while fragments float */
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            min-height: 100vh;
         }
 
-        .fragments-container {
-            padding: 120px 20px;
-            max-width: 800px;
-            width: 100%;
-            text-align: center;
+        .void-container {
             position: relative;
-            z-index: 10;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
         }
 
-        .fragment-header {
-            font-weight: 100;
-            letter-spacing: 12px;
-            opacity: 0.4;
-            text-transform: uppercase;
-            margin-bottom: 60px;
-        }
-
-        .fragment-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 40px;
-            border-radius: 40px;
-            margin-bottom: 30px;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            transition: transform 0.3s ease;
-        }
-
-        .fragment-item:hover {
-            transform: scale(1.02);
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        p {
-            line-height: 1.8;
-            color: rgba(255, 255, 255, 0.6);
+        /* The Floating Words */
+        .fragment {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.4);
+            font-family: 'Georgia', serif;
             font-style: italic;
+            white-space: nowrap;
+            user-select: none;
+            cursor: default;
+            filter: blur(1px);
+            transition: color 0.5s, filter 0.5s, opacity 0.5s;
+            animation: drift linear infinite;
+        }
+
+        .fragment:hover {
+            color: rgba(255, 255, 255, 1);
+            filter: blur(0px);
+            opacity: 1 !important;
+            z-index: 100;
+        }
+
+        /* Animation for drifting around */
+        @keyframes drift {
+            from { transform: translate(0, 0) rotate(0deg); }
+            to { transform: translate(var(--x), var(--y)) rotate(var(--r)); }
+        }
+
+        .fragment-title {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 100;
+            letter-spacing: 20px;
+            opacity: 0.2;
+            text-transform: uppercase;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="fragments-container">
-        <h1 class="fragment-header">Fragments</h1>
-        
-        <div class="fragment-item">
-            <p>"Memory is a ghost that refuses to leave the room."</p>
-        </div>
+    <h1 class="fragment-title">Fragments</h1>
 
-        <div class="fragment-item">
-            <p>"The stars are just holes in the ceiling of the void."</p>
+    <div class="void-container" id="void">
         </div>
-    </div>
 
     <div id="bottomControls">
         <a class="icon-btn" href="index.html">🏠 HOME</a>
         <a class="icon-btn" href="ikus-journal.html">📓 JOURNAL</a>
     </div>
 
+    <script>
+        const fragmentsData = [
+            "echoes in the dark",
+            "shattered memories",
+            "the weight of silence",
+            "drifting alone",
+            "lost in thought",
+            "fragments of a dream",
+            "a quiet storm",
+            "the edge of the void",
+            "nothing is permanent",
+            "fleeting moments"
+        ];
+
+        const voidContainer = document.getElementById('void');
+
+        function createFragment(text) {
+            const div = document.createElement('div');
+            div.className = 'fragment';
+            div.innerText = text;
+
+            // Randomize starting position
+            const startX = Math.random() * window.innerWidth;
+            const startY = Math.random() * window.innerHeight;
+            
+            // Randomize movement distance
+            const moveX = (Math.random() - 0.5) * 200 + "px";
+            const moveY = (Math.random() - 0.5) * 200 + "px";
+            const rotation = (Math.random() - 0.5) * 45 + "deg";
+            
+            // Randomize speed
+            const duration = 15 + Math.random() * 20 + "s";
+            
+            div.style.left = startX + "px";
+            div.style.top = startY + "px";
+            div.style.opacity = 0.1 + Math.random() * 0.4;
+            div.style.fontSize = (14 + Math.random() * 18) + "px";
+            
+            // Set CSS variables for the animation
+            div.style.setProperty('--x', moveX);
+            div.style.setProperty('--y', moveY);
+            div.style.setProperty('--r', rotation);
+            
+            div.style.animationDuration = duration;
+            div.style.animationDirection = "alternate";
+
+            voidContainer.appendChild(div);
+        }
+
+        // Spawn fragments
+        fragmentsData.forEach(text => createFragment(text));
+
+        // Re-spawn some more for density
+        fragmentsData.forEach(text => createFragment(text));
+    </script>
 </body>
 </html>
