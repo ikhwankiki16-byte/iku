@@ -8,12 +8,35 @@
   <meta name="theme-color" content="#050505">
   <title>iku's journal</title>
   <style>
-    html { background-color: #000000; }
+    /* FORCE THE BACKGROUND AND LAYOUT */
+    html, body { 
+      background-color: #000 !important; 
+      margin: 0; 
+      padding: 0; 
+      width: 100%;
+    }
     body { 
       background: radial-gradient(circle at center, #0b1c2d 0%, #05070a 60%, #000000 100%) !important;
-      color: white; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-y: auto; font-family: Arial, sans-serif;
+      color: white; 
+      min-height: 100vh; 
+      display: flex !important; 
+      flex-direction: column !important; 
+      align-items: center !important; 
+      font-family: Arial, sans-serif;
     }
-    h1 { font-weight: 300; letter-spacing: 6px; margin-top: 60px; text-transform: lowercase; opacity: 0.8; }
+
+    /* FORCE THE TITLE TO APPEAR */
+    h1 { 
+      display: block !important;
+      visibility: visible !important;
+      font-weight: 300; 
+      letter-spacing: 6px; 
+      margin-top: 60px !important; 
+      text-transform: lowercase; 
+      opacity: 0.8; 
+      text-align: center;
+    }
+
     .journal-container { max-width: 600px; width: 95%; margin: 20px auto; padding-bottom: 150px; box-sizing: border-box; }
     
     textarea#note {
@@ -23,7 +46,7 @@
     }
     #saveBtn {
       width: 100%; margin-top: 15px; border-radius: 20px; font-weight: 800; padding: 14px; 
-      background: white; color: black; border: none; cursor: pointer; font-family: Arial, sans-serif !important;
+      background: white; color: black; border: none; cursor: pointer;
     }
     .journal-entry { 
       background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); 
@@ -34,12 +57,40 @@
     }
     .entry-date { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-bottom: 12px; letter-spacing: 2px; }
     .entry-content { white-space: pre-wrap; font-family: 'Courier New', monospace; line-height: 1.7; font-size: 1rem; color: rgba(255,255,255,0.9); }
-    .delete-btn { position: absolute; top: 20px; right: 20px; color: #ff4444; background: none; border: none; cursor: pointer; font-size: 0.7rem; font-family: Arial, sans-serif !important; }
+    .delete-btn { position: absolute; top: 20px; right: 20px; color: #ff4444; background: none; border: none; cursor: pointer; font-size: 0.7rem; }
 
-    #bottomControls { position: fixed; bottom: 30px; display: flex; justify-content: center; gap: 12px; z-index: 1000; width: 100%; }
-    .icon-btn, .lock-btn { background: white; color: black; border: none; border-radius: 20px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; height: 48px; text-decoration: none; font-size: 0.9rem; }
+    /* FORCE THE BUTTONS TO BE CENTERED */
+    #bottomControls { 
+      position: fixed !important; 
+      bottom: 30px !important; 
+      left: 0 !important;
+      right: 0 !important;
+      display: flex !important; 
+      justify-content: center !important; 
+      align-items: center !important;
+      gap: 12px !important; 
+      z-index: 1000 !important; 
+      width: 100% !important; 
+      pointer-events: none; /* Prevents container from blocking clicks */
+    }
+    .icon-btn, .lock-btn { 
+      pointer-events: auto; /* Re-enables clicks for buttons */
+      background: white; 
+      color: black; 
+      border: none; 
+      border-radius: 20px; 
+      font-weight: 800; 
+      display: inline-flex !important; 
+      align-items: center; 
+      justify-content: center; 
+      height: 48px; 
+      text-decoration: none; 
+      font-size: 0.9rem; 
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
     .icon-btn { width: 145px; gap: 8px; }
     .lock-btn { width: 48px; cursor: pointer; }
+
     #loginPopup { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: #111; border: 1px solid #333; padding: 25px; border-radius: 24px; display: none; flex-direction: column; gap: 12px; width: 280px; }
     #loginPopup input { background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 12px; width: 100%; box-sizing: border-box; }
   </style>
@@ -115,7 +166,7 @@
       <div id="loginPopup">
         <input type="email" id="emailInput" placeholder="email">
         <input type="password" id="passInput" placeholder="password">
-        <button id="performLoginBtn" style="background:white; color:black; border:none; padding:10px; border-radius:10px; font-weight:bold;">LOGIN</button>
+        <button id="performLoginBtn" style="background:white; color:black; border:none; padding:10px; border-radius:10px; font-weight:bold; cursor:pointer;">LOGIN</button>
       </div>
     </div>
   </div>
