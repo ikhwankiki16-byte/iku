@@ -8,108 +8,98 @@
     <link rel="stylesheet" href="style.css">
     
     <style>
-        /* 1. LAYOUT RESET & FIX */
-        body { 
-            display: block !important; /* Overrides the centering flex from style.css */
+        /* 1. OVERRIDE EVERYTHING TO ENSURE VISIBILITY */
+        html, body {
+            background: #000 !important;
+            display: block !important; /* Forces vertical flow */
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: hidden;
             overflow-y: auto !important;
-            padding-bottom: 100px;
         }
 
-        .title-header { width: 100%; text-align: center; padding: 80px 20px 40px 20px; }
-        h1 { margin: 0; font-weight: 200; letter-spacing: 8px; text-transform: lowercase; font-size: 2.2rem; color: #ffffff !important; opacity: 0.9; }
+        .title-header { text-align: center; padding: 60px 20px 20px; }
+        h1 { font-weight: 200; letter-spacing: 8px; color: white; opacity: 0.8; }
         
-        .journal-container { max-width: 1400px; width: 92%; margin: 0 auto; }
-        
-        #editorArea { margin-bottom: 60px; max-width: 800px; margin-left: auto; margin-right: auto; }
-        textarea#note {
-            width: 100%; padding: 25px; border-radius: 28px; border: 1px solid rgba(255,255,255,0.1); 
-            background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            color: #fff; font-family: 'Georgia', serif; font-size: 18px; resize: none; outline: none;
-            line-height: 1.6;
+        .journal-container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px;
+            position: relative;
+            z-index: 10;
         }
-        #saveBtn { width: 100%; margin-top: 20px; border-radius: 50px; font-weight: 800; padding: 16px; background: white; color: black; border: none; cursor: pointer; letter-spacing: 1px; transition: 0.3s; }
 
-        /* 2. THE DREAMY EXPANSION SYSTEM */
+        /* 2. THE FLEX SYSTEM (DREAMY SIDEWAYS) */
         #entries {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 30px;
-            align-items: flex-start;
+            gap: 25px;
+            min-height: 200px;
         }
 
         .journal-entry { 
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 28px;
-            border-radius: 30px; 
-            position: relative; 
-            width: 340px; 
-            min-height: 140px;
-            cursor: pointer; 
-            overflow: hidden;
-            transition: 
-                width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), 
-                transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
-                background 0.8s ease,
-                opacity 0.6s ease,
-                filter 0.6s ease;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 25px;
+            width: 320px; /* Starting width */
+            cursor: pointer;
+            transition: width 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                        transform 0.6s ease, 
+                        filter 0.5s ease, 
+                        opacity 0.5s ease;
         }
-        
-        /* Sideways Expansion on Hover */
+
         .journal-entry:hover {
-            width: 500px;
-            background: rgba(255, 255, 255, 0.07);
-            transform: translateY(-8px);
-            z-index: 10;
+            width: 480px; /* Sideways expansion */
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
         }
 
-        /* Neighbor blur effect */
+        /* Neighbor Blur Logic */
         #entries:has(.journal-entry:hover) .journal-entry:not(:hover) {
-            opacity: 0.4;
-            filter: blur(3px);
-            transform: scale(0.96);
+            opacity: 0.5;
+            filter: blur(4px);
         }
 
-        /* 3. SMOOTH CONTENT UNROLLING */
-        .entry-content { 
-            max-height: 0; 
+        /* 3. SMOOTH PRESS-TO-EXPAND CONTENT */
+        .entry-content {
+            max-height: 0;
             opacity: 0;
             overflow: hidden;
-            margin-top: 0;
-            white-space: pre-wrap; 
-            font-family: 'Georgia', serif; 
-            line-height: 1.8; 
-            color: rgba(255,255,255,0.75); 
-            font-size: 1.05rem;
-            transition: max-height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s ease, margin-top 0.5s ease;
+            transition: max-height 0.8s ease, opacity 0.5s ease, margin-top 0.5s ease;
+            font-family: 'Georgia', serif;
+            line-height: 1.7;
+            color: rgba(255,255,255,0.7);
         }
 
-        .journal-entry.expanded { 
-            width: 100% !important; 
-            max-width: 1100px; 
-            cursor: default;
+        .journal-entry.expanded {
+            width: 100% !important; /* Take full row on click */
+            max-width: 1000px;
         }
 
-        .journal-entry.expanded .entry-content { 
-            max-height: 1500px; 
+        .journal-entry.expanded .entry-content {
+            max-height: 2000px;
             opacity: 1;
             margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255,255,255,0.08);
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
         }
 
-        /* TYPOGRAPHY & ICONS */
-        .entry-title { font-weight: 600; font-size: 1.25rem; color: #ffffff; margin-bottom: 8px; display: block; }
-        .entry-date { font-size: 0.75rem; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1.5px; }
-        .expand-icon { position: absolute; right: 28px; top: 30px; font-size: 1.4rem; color: rgba(255,255,255,0.2); transition: 0.8s; }
-        .expanded .expand-icon { transform: rotate(45deg); color: #fff; }
-        .delete-btn { position: absolute; bottom: 20px; right: 25px; color: #ff5555; background: rgba(255,0,0,0.1); border: 1px solid rgba(255, 85, 85, 0.3); border-radius: 12px; padding: 6px 12px; display: none; }
-        .expanded .delete-btn { display: block; }
+        .entry-title { font-weight: bold; font-size: 1.2rem; display: block; margin-bottom: 5px; }
+        .entry-date { font-size: 0.7rem; opacity: 0.4; text-transform: uppercase; }
 
-        @media (max-width: 650px) { .journal-entry { width: 100%; } .journal-entry:hover { width: 100%; } }
+        /* Login UI */
+        #bottomControls { position: fixed; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 1000; }
+        #loginPopup { 
+            display: none; position: absolute; bottom: 80px; background: #111; border: 1px solid #333; 
+            padding: 20px; border-radius: 20px; flex-direction: column; gap: 10px; width: 250px; 
+        }
     </style>
 </head>
 <body>
@@ -117,20 +107,21 @@
     <div class="title-header"><h1>iku's journal</h1></div>
     
     <div class="journal-container">
-        <div id="editorArea" style="display:none;">
-            <textarea id="note" rows="5" placeholder="Headline...&#10;&#10;Your story begins here..."></textarea>
-            <button id="saveBtn">POST ENTRY</button>
+        <div id="editorArea" style="display:none; margin-bottom: 40px; text-align: center;">
+            <textarea id="note" style="width:100%; height:150px; border-radius:20px; background:rgba(255,255,255,0.05); color:white; padding:20px; border:1px solid #333;" placeholder="Write..."></textarea>
+            <button id="saveBtn" class="icon-btn" style="margin-top:15px; width:100%;">POST ENTRY</button>
         </div>
-        <div id="entries"></div>
+
+        <div id="entries"><p id="loadingMsg">connecting to the void...</p></div>
     </div>
 
     <div id="bottomControls">
         <a class="icon-btn" href="index.html">🏠 HOME</a>
         <button id="showLoginBtn" class="lock-btn">🔒</button>
         <div id="loginPopup">
-            <input type="email" id="emailInput" placeholder="email">
-            <input type="password" id="passInput" placeholder="password">
-            <button id="performLoginBtn" style="background:white; color:black; border:none; padding:12px; border-radius:15px; font-weight:bold; cursor:pointer;">SIGN IN</button>
+            <input type="email" id="emailInput" placeholder="email" style="padding:10px; border-radius:10px; border:none;">
+            <input type="password" id="passInput" placeholder="password" style="padding:10px; border-radius:10px; border:none;">
+            <button id="performLoginBtn" style="background:white; padding:10px; border-radius:10px; font-weight:bold;">SIGN IN</button>
         </div>
     </div>
 
@@ -157,62 +148,64 @@
             document.getElementById('showLoginBtn').innerHTML = isAdmin ? '🔓' : '🔒';
         });
 
+        // LOAD ENTRIES
         onValue(ref(db, 'entries'), (snapshot) => {
             const list = document.getElementById('entries');
-            list.innerHTML = '';
+            list.innerHTML = ''; // Clear loading message
             const data = snapshot.val();
             if (data) {
                 Object.keys(data).reverse().forEach(key => {
                     const entry = data[key];
                     const lines = entry.text.split('\n');
-                    const titleText = lines[0];
-                    const bodyText = lines.slice(1).join('\n').trim();
+                    const title = lines[0];
+                    const body = lines.slice(1).join('\n');
 
                     const div = document.createElement('div');
                     div.className = 'journal-entry';
                     div.innerHTML = `
-                        <span class="expand-icon">+</span>
-                        <span class="entry-title">${titleText}</span>
-                        <div class="entry-date">${new Date(entry.date).toLocaleDateString()}</div>
-                        <div class="entry-content">${bodyText || "..." }</div>
-                        ${isAdmin ? '<button class="delete-btn">DELETE</button>' : ''}
+                        <span class="entry-title">${title}</span>
+                        <span class="entry-date">${new Date(entry.date).toLocaleDateString()}</span>
+                        <div class="entry-content">${body || '...'}</div>
+                        ${isAdmin ? '<button class="delete-trigger" style="color:red; margin-top:10px; background:none; border:none; cursor:pointer;">[DELETE]</button>' : ''}
                     `;
 
-                    div.addEventListener('click', (e) => {
-                        if (e.target.classList.contains('delete-btn')) return;
+                    div.onclick = (e) => {
+                        if (e.target.className === 'delete-trigger') return;
                         div.classList.toggle('expanded');
-                    });
+                    };
 
                     if (isAdmin) {
-                        div.querySelector('.delete-btn').addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            if (confirm("Delete?")) remove(ref(db, `entries/${key}`));
-                        });
+                        div.querySelector('.delete-trigger').onclick = () => {
+                            if(confirm("Delete?")) remove(ref(db, `entries/${key}`));
+                        };
                     }
                     list.appendChild(div);
                 });
+            } else {
+                list.innerHTML = '<p>The void is currently empty.</p>';
             }
         });
 
-        document.getElementById('showLoginBtn').addEventListener('click', () => {
+        // LOGIN LOGIC
+        document.getElementById('showLoginBtn').onclick = () => {
             const p = document.getElementById('loginPopup');
             p.style.display = (p.style.display === 'flex') ? 'none' : 'flex';
-        });
+        };
 
-        document.getElementById('performLoginBtn').addEventListener('click', async () => {
+        document.getElementById('performLoginBtn').onclick = async () => {
             try {
                 await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value);
-                window.location.reload(); 
-            } catch (e) { alert("Error"); }
-        });
+                document.getElementById('loginPopup').style.display = 'none';
+            } catch (e) { alert("Access Denied"); }
+        };
 
-        document.getElementById('saveBtn').addEventListener('click', () => {
+        document.getElementById('saveBtn').onclick = () => {
             const ta = document.getElementById('note');
             if (ta.value.trim()) {
                 push(ref(db, 'entries'), { date: new Date().toISOString(), text: ta.value });
                 ta.value = '';
             }
-        });
+        };
     </script>
 </body>
 </html>
