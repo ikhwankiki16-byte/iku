@@ -13,12 +13,17 @@
 
         .journal-container { max-width: 1400px; margin: 0 auto; }
 
-        /* Smooth Press-to-Expand Logic */
+        /* Smooth Press-to-Expand with Paragraph Support */
         .entry-content {
             max-height: 0;
             opacity: 0;
             overflow: hidden;
             margin-top: 0;
+            
+            /* THIS KEEPS YOUR PARAGRAPHS */
+            white-space: pre-wrap; 
+            overflow-wrap: break-word;
+
             font-family: 'Georgia', serif;
             line-height: 1.8;
             color: rgba(255,255,255,0.7);
@@ -32,22 +37,22 @@
         }
 
         .journal-entry.expanded .entry-content {
-            max-height: 2000px;
+            max-height: 3000px; /* Increased to allow long stories */
             opacity: 1;
             margin-top: 20px;
             padding-top: 20px;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
 
-        .entry-title { font-weight: 600; font-size: 1.3rem; display: block; margin-bottom: 5px; }
-        .entry-date { font-size: 0.75rem; opacity: 0.3; text-transform: uppercase; letter-spacing: 1px; }
+        .entry-title { font-weight: 600; font-size: 1.4rem; display: block; margin-bottom: 5px; color: #fff; }
+        .entry-date { font-size: 0.75rem; opacity: 0.3; text-transform: uppercase; letter-spacing: 1.5px; }
 
         #loginPopup { 
             display: none; position: absolute; bottom: 80px; background: rgba(10, 10, 10, 0.95); 
             backdrop-filter: blur(20px); border: 1px solid #333; padding: 25px; border-radius: 25px; 
             flex-direction: column; gap: 12px; width: 280px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
-        #loginPopup input { padding: 12px; border-radius: 12px; border: none; background: #000; color: white; }
+        #loginPopup input { padding: 12px; border-radius: 12px; border: none; background: #000; color: white; outline: none; }
     </style>
 </head>
 <body>
@@ -57,7 +62,7 @@
     <div class="journal-container">
         <div id="editorArea" style="display:none; margin-bottom: 60px; padding: 0 20px;">
             <div style="max-width: 800px; margin: 0 auto;">
-                <textarea id="note" style="width:100%; height:180px; border-radius:24px; background:rgba(255,255,255,0.03); color:white; padding:25px; border:1px solid rgba(255,255,255,0.1); outline:none; font-size: 16px;" placeholder="Headline...&#10;&#10;Your story..."></textarea>
+                <textarea id="note" style="width:100%; height:200px; border-radius:24px; background:rgba(255,255,255,0.03); color:white; padding:25px; border:1px solid rgba(255,255,255,0.1); outline:none; font-size: 16px; line-height: 1.6;" placeholder="Headline (First line)&#10;&#10;Then your story..."></textarea>
                 <button id="saveBtn" class="icon-btn" style="margin-top:20px; width:100%;">POST ENTRY</button>
             </div>
         </div>
@@ -107,7 +112,7 @@
                     const entry = data[key];
                     const lines = entry.text.split('\n');
                     const title = lines[0];
-                    const body = lines.slice(1).join('\n');
+                    const body = lines.slice(1).join('\n').trim();
 
                     const div = document.createElement('div');
                     div.className = 'journal-entry';
@@ -115,7 +120,7 @@
                         <span class="entry-title">${title}</span>
                         <span class="entry-date">${new Date(entry.date).toLocaleDateString()}</span>
                         <div class="entry-content">${body || '...'}</div>
-                        ${isAdmin ? '<button class="del-trigger" style="color:#ff5555; background:none; border:none; margin-top:15px; cursor:pointer; font-size:10px;">[ DELETE ]</button>' : ''}
+                        ${isAdmin ? '<button class="del-trigger" style="color:#ff5555; background:rgba(255,0,0,0.1); border:none; margin-top:15px; cursor:pointer; font-size:10px; padding:5px 10px; border-radius:8px;">DELETE</button>' : ''}
                     `;
 
                     div.onclick = (e) => {
@@ -126,13 +131,13 @@
                     if (isAdmin) {
                         div.querySelector('.del-trigger').onclick = (e) => {
                             e.stopPropagation();
-                            if(confirm("Delete entry?")) remove(ref(db, `entries/${key}`));
+                            if(confirm("Permanently remove this entry?")) remove(ref(db, `entries/${key}`));
                         };
                     }
                     list.appendChild(div);
                 });
             } else {
-                list.innerHTML = '<p style="opacity:0.2;">The void is empty.</p>';
+                list.innerHTML = '<p style="opacity:0.2;">The void is currently empty.</p>';
             }
         });
 
@@ -145,7 +150,7 @@
             try {
                 await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value);
                 document.getElementById('loginPopup').style.display = 'none';
-            } catch (e) { alert("Denied."); }
+            } catch (e) { alert("Invalid Credentials."); }
         };
 
         document.getElementById('saveBtn').onclick = () => {
