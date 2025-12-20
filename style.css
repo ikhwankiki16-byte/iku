@@ -1,85 +1,93 @@
-/* 1. UNIVERSAL RESET & BACKGROUND */
-* { box-sizing: border-box; }
-
-html, body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  background-color: #000;
+/* 1. GLOBAL RESET & GRADIENT */
+html {
+    /* Fixed gradient on HTML ensures it stays visible on ALL pages */
+    background: radial-gradient(circle at center, #0b1c2d 0%, #05070a 60%, #000000 100%) no-repeat fixed !important;
+    background-size: cover !important;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
 }
 
-/* Apply gradient to body so it works on all pages */
 body {
-  color: white;
-  font-family: 'Inter', -apple-system, sans-serif;
-  background: radial-gradient(circle at center, #0b1c2d 0%, #05070a 60%, #000000 100%) no-repeat fixed !important;
-  background-size: cover;
+    margin: 0;
+    padding: 0;
+    color: white;
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: transparent !important; /* Lets the HTML gradient shine through */
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
-/* 2. ATMOSPHERIC GRAIN (Fixed Layering) */
+/* 2. ATMOSPHERIC GRAIN (Fixed to BEHIND everything) */
 body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
-  pointer-events: none; /* Allows you to click the game through the grain */
-  z-index: 1; 
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+    pointer-events: none; /* Clicks pass through to the game */
+    z-index: -1; /* Behind everything */
 }
 
-/* 3. NAVIGATION BUTTONS */
-#bottomControls {
-  position: fixed; bottom: 30px; left: 0; width: 100%;
-  display: flex; justify-content: center; align-items: center; gap: 15px;
-  z-index: 2000;
-}
-
+/* 3. UNIVERSAL BUTTON STYLING */
 .icon-btn, .lock-btn {
-  background: white;
-  color: black;
-  border: none;
-  border-radius: 50px;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  height: 54px;
-  padding: 0 25px;
-  gap: 10px;
-  font-size: 0.9rem;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  cursor: pointer;
-  position: relative;
-  z-index: 2001;
+    background: white;
+    color: black;
+    border: none;
+    border-radius: 50px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    height: 54px;
+    padding: 0 25px;
+    gap: 10px;
+    font-size: 0.9rem;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    position: relative;
+    z-index: 10; /* Above the grain */
 }
 
-.lock-btn { width: 54px; padding: 0; border-radius: 50%; }
+.icon-btn:hover {
+    transform: translateY(-5px) scale(1.05);
+    background-color: #f0f0f0;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+}
 
-/* 4. JOURNAL SYSTEM */
+/* 4. BOTTOM NAVIGATION */
+#bottomControls {
+    position: fixed; 
+    bottom: 30px; 
+    left: 0; 
+    width: 100%;
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    gap: 15px;
+    z-index: 1000;
+}
+
+/* 5. JOURNAL SYSTEM */
 #entries {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 30px;
-  padding: 40px 20px 150px 20px;
-  max-width: 1400px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    padding: 40px 20px 150px 20px;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .journal-entry {
-  flex: 0 1 340px;
-  min-height: 160px;
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 30px;
-  padding: 30px;
-  cursor: pointer;
-  transition: flex-basis 0.7s ease, transform 0.4s ease;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    padding: 30px;
+    flex: 0 1 340px;
+    transition: all 0.5s ease;
+    cursor: pointer;
 }
-
-.journal-entry:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.08); }
