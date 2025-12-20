@@ -7,37 +7,83 @@
   <title>iku's journal</title>
   <style>
     * { box-sizing: border-box; }
-    html, body { 
-      background: #000 !important; 
-      margin: 0; padding: 0; width: 100%; min-height: 100vh;
-      color: white; font-family: Arial, sans-serif;
+    
+    html { 
+      background-color: #000; 
+    }
+
+    body { 
+      /* Restored the gradient background */
+      background: radial-gradient(circle at center, #0b1c2d 0%, #05070a 60%, #000000 100%) no-repeat fixed !important;
+      color: white; 
+      margin: 0; 
+      padding: 0; 
+      width: 100%; 
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
       scroll-behavior: smooth;
     }
+
     .title-header { width: 100%; text-align: center; padding: 60px 20px 20px 20px; }
-    h1 { margin: 0; font-weight: 300; letter-spacing: 6px; text-transform: lowercase; font-size: 2rem; color: #ffffff !important; }
+    h1 { margin: 0; font-weight: 300; letter-spacing: 6px; text-transform: lowercase; font-size: 2rem; color: #ffffff !important; opacity: 0.9; }
+    
     .journal-container { max-width: 600px; width: 90%; margin: 0 auto; padding-bottom: 150px; }
+
+    /* Restored the glass effect for the input area */
     textarea#note {
-      width: 100%; padding: 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); 
-      background: rgba(255, 255, 255, 0.05); color: #fff; font-family: 'Courier New', monospace; font-size: 16px; resize: none; outline: none;
+      width: 100%; padding: 20px; border-radius: 24px; 
+      border: 1px solid rgba(255,255,255,0.1); 
+      background: rgba(255, 255, 255, 0.03); 
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #fff; font-family: 'Courier New', monospace; font-size: 16px; resize: none; outline: none;
     }
-    #saveBtn { width: 100%; margin-top: 15px; border-radius: 20px; font-weight: 800; padding: 14px; background: white; color: black; border: none; cursor: pointer; }
+
+    #saveBtn { width: 100%; margin-top: 15px; border-radius: 20px; font-weight: 800; padding: 14px; background: white; color: black; border: none; cursor: pointer; transition: opacity 0.2s; }
+    #saveBtn:active { opacity: 0.8; }
+
+    /* Restored the glass effect for entries */
     .journal-entry { 
-      background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); 
+      background: rgba(255, 255, 255, 0.03); 
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08); 
       padding: 25px 25px 25px 35px; border-radius: 24px; margin-top: 20px; position: relative;
     }
-    .journal-entry::before { content: ""; position: absolute; left: 0; top: 15%; height: 70%; width: 4px; background: #fff; }
-    .entry-date { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-bottom: 12px; }
-    .entry-content { white-space: pre-wrap; font-family: 'Courier New', monospace; line-height: 1.7; }
+
+    .journal-entry::before { 
+      content: ""; position: absolute; left: 0; top: 15%; height: 70%; width: 4px; 
+      background: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.3);
+    }
+
+    .entry-date { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-bottom: 12px; letter-spacing: 1px; }
+    .entry-content { white-space: pre-wrap; font-family: 'Courier New', monospace; line-height: 1.7; color: rgba(255,255,255,0.9); }
+    
     .delete-btn { 
       position: absolute; top: 20px; right: 20px; color: #ff4444; 
-      background: none; border: 1px solid #ff4444; border-radius: 8px;
+      background: none; border: 1px solid rgba(255, 68, 68, 0.4); border-radius: 8px;
       cursor: pointer; font-size: 10px; padding: 4px 8px; font-weight: bold;
     }
+
     #bottomControls { position: fixed; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; gap: 12px; z-index: 1000; }
-    .icon-btn, .lock-btn { background: white; color: black; border: none; border-radius: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center; height: 48px; text-decoration: none; cursor: pointer; }
-    .icon-btn { width: 140px; gap: 8px; } .lock-btn { width: 48px; }
-    #loginPopup { position: absolute; bottom: 80px; background: #111; border: 1px solid #333; padding: 20px; border-radius: 20px; display: none; flex-direction: column; gap: 10px; width: 250px; }
-    #loginPopup input { background: #000; border: 1px solid #444; color: white; padding: 10px; border-radius: 10px; width: 100%; }
+    
+    .icon-btn, .lock-btn { 
+      background: white; color: black; border: none; border-radius: 20px; 
+      font-weight: 800; display: flex; align-items: center; justify-content: center; 
+      height: 48px; text-decoration: none; cursor: pointer;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+
+    .icon-btn { width: 140px; gap: 8px; } 
+    .lock-btn { width: 48px; }
+
+    #loginPopup { 
+      position: absolute; bottom: 80px; background: rgba(17, 17, 17, 0.95); 
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid #333; padding: 20px; border-radius: 20px; 
+      display: none; flex-direction: column; gap: 10px; width: 250px; 
+    }
+    #loginPopup input { background: #000; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; width: 100%; outline: none; }
   </style>
 
   <script type="module">
@@ -55,25 +101,19 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
     let isAdmin = false;
-    let initialLoad = true; // Prevents refresh loop on first load
+    let initialLoad = true;
 
-    // Login State Listener with Auto-Refresh
     onAuthStateChanged(auth, user => {
       const userIsAdmin = !!user;
-      
-      // If the login state changed AFTER the page loaded, refresh
       if (!initialLoad && isAdmin !== userIsAdmin) {
         window.location.reload();
       }
-      
       isAdmin = userIsAdmin;
       initialLoad = false; 
-
       document.getElementById('editorArea').style.display = user ? 'block' : 'none';
       document.getElementById('showLoginBtn').innerHTML = user ? '🔓' : '🔒';
     });
 
-    // Load Entries
     onValue(ref(db, 'entries'), (snapshot) => {
       const list = document.getElementById('entries');
       list.innerHTML = '';
