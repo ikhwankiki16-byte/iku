@@ -6,19 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>iku's journal</title>
     <link rel="stylesheet" href="style.css">
-    
     <style>
+        /* Journal specific layout adjustments */
+        body { display: block; } /* Block allows normal scrolling */
+        
         .title-header { text-align: center; padding: 80px 20px 40px; }
-        h1 { font-weight: 200; letter-spacing: 8px; color: white; opacity: 0.8; margin: 0; }
+        h1 { font-weight: 200; letter-spacing: 8px; opacity: 0.8; margin: 0; }
 
-        .journal-container { max-width: 1400px; margin: 0 auto; }
-
-        /* Paragraph support and Smooth Unrolling */
         .entry-content {
             max-height: 0;
             opacity: 0;
             overflow: hidden;
-            margin-top: 0;
             white-space: pre-wrap; 
             overflow-wrap: break-word;
             font-family: 'Georgia', serif;
@@ -30,8 +28,6 @@
         .journal-entry.expanded {
             flex-basis: 100% !important;
             max-width: 1100px;
-            cursor: default;
-            /* Leaves space at the top when scrolling into view */
             scroll-margin-top: 50px; 
         }
 
@@ -49,7 +45,7 @@
         #loginPopup { 
             display: none; position: absolute; bottom: 80px; background: rgba(10, 10, 10, 0.95); 
             backdrop-filter: blur(20px); border: 1px solid #333; padding: 25px; border-radius: 25px; 
-            flex-direction: column; gap: 12px; width: 280px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            flex-direction: column; gap: 12px; width: 280px; z-index: 3000;
         }
         #loginPopup input { padding: 12px; border-radius: 12px; border: none; background: #000; color: white; outline: none; }
     </style>
@@ -61,11 +57,10 @@
     <div class="journal-container">
         <div id="editorArea" style="display:none; margin-bottom: 60px; padding: 0 20px;">
             <div style="max-width: 800px; margin: 0 auto;">
-                <textarea id="note" style="width:100%; height:200px; border-radius:24px; background:rgba(255,255,255,0.03); color:white; padding:25px; border:1px solid rgba(255,255,255,0.1); outline:none; font-size: 16px; line-height: 1.6;" placeholder="Headline (First line)&#10;&#10;Then your story..."></textarea>
+                <textarea id="note" style="width:100%; height:200px; border-radius:24px; background:rgba(255,255,255,0.03); color:white; padding:25px; border:1px solid rgba(255,255,255,0.1); outline:none; font-size: 16px; line-height: 1.6;" placeholder="Headline...&#10;&#10;Story..."></textarea>
                 <button id="saveBtn" class="icon-btn" style="margin-top:20px; width:100%;">POST ENTRY</button>
             </div>
         </div>
-
         <div id="entries"><p id="loadingMsg">connecting to the void...</p></div>
     </div>
 
@@ -124,27 +119,24 @@
 
                     div.onclick = (e) => {
                         if (e.target.className === 'del-trigger') return;
-                        
                         const isExpanded = div.classList.toggle('expanded');
-                        
-                        // AUTO-SCROLL LOGIC
                         if (isExpanded) {
                             setTimeout(() => {
                                 div.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }, 150); // Delay to match the start of the expansion animation
+                            }, 150); 
                         }
                     };
 
                     if (isAdmin) {
                         div.querySelector('.del-trigger').onclick = (e) => {
                             e.stopPropagation();
-                            if(confirm("Permanently remove this entry?")) remove(ref(db, `entries/${key}`));
+                            if(confirm("Delete?")) remove(ref(db, `entries/${key}`));
                         };
                     }
                     list.appendChild(div);
                 });
             } else {
-                list.innerHTML = '<p style="opacity:0.2;">The void is currently empty.</p>';
+                list.innerHTML = '<p style="opacity:0.2;">The void is empty.</p>';
             }
         });
 
@@ -157,7 +149,7 @@
             try {
                 await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value);
                 document.getElementById('loginPopup').style.display = 'none';
-            } catch (e) { alert("Invalid Credentials."); }
+            } catch (e) { alert("Denied."); }
         };
 
         document.getElementById('saveBtn').onclick = () => {
