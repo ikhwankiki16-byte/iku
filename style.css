@@ -6,11 +6,11 @@ html, body {
 }
 
 body {
-  display: block; /* Changed to block so content can scroll naturally */
+  display: block; 
   min-height: 100vh;
   color: white;
   font-family: 'Inter', -apple-system, sans-serif;
-  /* Fixed attachment keeps the gradient visible while scrolling */
+  /* Fixed attachment keeps the gradient centered on screen while scrolling */
   background: radial-gradient(circle at center, #0b1c2d 0%, #05070a 60%, #000000 100%) !important;
   background-attachment: fixed !important;
   overflow-x: hidden; 
@@ -67,7 +67,7 @@ body::before {
 
 .journal-entry {
   position: relative;
-  flex: 0 1 340px; /* Base width */
+  flex: 0 1 340px; 
   min-height: 160px;
   background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(15px);
@@ -92,13 +92,12 @@ body::before {
 }
 
 .journal-entry:hover {
-  flex-basis: 520px; /* Sideways Growth */
+  flex-basis: 520px; 
   background: rgba(255, 255, 255, 0.08);
   transform: translateY(-8px) translateZ(0);
   z-index: 10;
 }
 
-/* Soft blur for neighbors */
 #entries:has(.journal-entry:hover) .journal-entry:not(:hover) {
   opacity: 0.4;
   filter: blur(3px);
