@@ -21,27 +21,39 @@
         .journal-entry.expanded { flex-basis: 100% !important; max-width: 1000px; }
         .journal-entry.expanded .entry-content { max-height: 2000px; opacity: 1; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
 
-        /* Login Popup Styling */
+        /* NEW LOGIN POPUP LOGIC */
         #loginPopup { 
-            display: none; /* Controlled by JS */
+            display: none; /* Default hidden */
             position: fixed; 
-            bottom: 100px; 
+            bottom: 110px; 
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 15, 15, 0.95); 
-            backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255,255,255,0.1); 
-            padding: 25px; 
-            border-radius: 30px; 
+            background: rgba(10, 10, 10, 0.98); 
+            backdrop-filter: blur(30px); 
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.15); 
+            padding: 30px; 
+            border-radius: 35px; 
             flex-direction: column; 
-            gap: 12px; 
-            width: 280px; 
-            z-index: 10000; /* Above everything */
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            gap: 15px; 
+            width: 300px; 
+            z-index: 10000; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
         }
+
+        /* This class is toggled by JavaScript */
+        #loginPopup.active {
+            display: flex !important;
+        }
+
         #loginPopup input { 
-            padding: 12px; border-radius: 12px; border: 1px solid #333; 
-            background: #000; color: white; outline: none; 
+            padding: 14px; border-radius: 15px; border: 1px solid #333; 
+            background: #000; color: white; outline: none; font-size: 16px;
+        }
+
+        .del-btn {
+            color: #ff4444; background: none; border: none; 
+            margin-top: 15px; cursor: pointer; font-size: 12px; letter-spacing: 1px;
         }
     </style>
 </head>
@@ -51,7 +63,7 @@
     
     <div id="editorArea" style="display:none; margin-bottom: 60px; padding: 0 20px; position: relative; z-index: 100;">
         <div style="max-width: 800px; margin: 0 auto;">
-            <textarea id="note" style="width:100%; height:200px; border-radius:24px; background:rgba(255,255,255,0.03); color:white; padding:25px; border:1px solid rgba(255,255,255,0.1); outline:none;" placeholder="Write something..."></textarea>
+            <textarea id="note" style="width:100%; height:200px; border-radius:24px; background:rgba(255,255,255,0.03); color:white; padding:25px; border:1px solid rgba(255,255,255,0.1); outline:none; font-size: 16px;" placeholder="Writing to the void..."></textarea>
             <button id="saveBtn" class="icon-btn" style="margin-top:20px; width:100%;">POST ENTRY</button>
         </div>
     </div>
@@ -64,9 +76,10 @@
     </div>
 
     <div id="loginPopup">
-        <input type="email" id="emailInput" placeholder="Email">
-        <input type="password" id="passInput" placeholder="Password">
-        <button id="performLoginBtn" style="background:white; color:black; padding:12px; border-radius:12px; font-weight:bold; border:none; cursor:pointer;">SIGN IN</button>
+        <div style="text-align:center; font-size: 0.8rem; opacity: 0.5; margin-bottom: 5px;">ADMIN ACCESS</div>
+        <input type="email" id="emailInput" placeholder="Email" autocomplete="email">
+        <input type="password" id="passInput" placeholder="Password" autocomplete="current-password">
+        <button id="performLoginBtn" style="background:white; color:black; padding:14px; border-radius:15px; font-weight:bold; border:none; cursor:pointer; margin-top: 5px;">SIGN IN</button>
     </div>
 
     <script type="module">
@@ -89,43 +102,38 @@
         const loginPopup = document.getElementById('loginPopup');
         const showLoginBtn = document.getElementById('showLoginBtn');
 
-        // 1. FIXED LOCK FUNCTION
+        // --- 1. THE LOCK BUTTON FIX ---
         showLoginBtn.onclick = (e) => {
-            e.stopPropagation(); // Prevents click from closing immediately
-            if (loginPopup.style.display === 'flex') {
-                loginPopup.style.display = 'none';
-            } else {
-                loginPopup.style.display = 'flex';
-            }
+            e.stopPropagation(); 
+            loginPopup.classList.toggle('active'); // Simply toggle the active class
         };
 
-        // Close popup if clicking outside
-        window.onclick = (e) => {
+        // Close when clicking outside the popup
+        document.addEventListener('click', (e) => {
             if (!loginPopup.contains(e.target) && e.target !== showLoginBtn) {
-                loginPopup.style.display = 'none';
+                loginPopup.classList.remove('active');
             }
-        };
+        });
 
-        // 2. AUTH STATE LOGIC
+        // --- 2. AUTHENTICATION LOGIC ---
         onAuthStateChanged(auth, (user) => {
             isAdmin = !!user;
             document.getElementById('editorArea').style.display = isAdmin ? 'block' : 'none';
             showLoginBtn.innerHTML = isAdmin ? '🔓' : '🔒';
         });
 
-        // 3. LOGIN ACTION
         document.getElementById('performLoginBtn').onclick = async () => {
             const email = document.getElementById('emailInput').value;
             const pass = document.getElementById('passInput').value;
             try {
                 await signInWithEmailAndPassword(auth, email, pass);
-                loginPopup.style.display = 'none';
+                loginPopup.classList.remove('active');
             } catch (e) {
-                alert("Access Denied");
+                alert("Incorrect credentials.");
             }
         };
 
-        // 4. LOAD ENTRIES
+        // --- 3. JOURNAL DATA LOGIC ---
         onValue(ref(db, 'entries'), (snapshot) => {
             const list = document.getElementById('entries');
             list.innerHTML = '';
@@ -139,7 +147,7 @@
                         <div style="font-weight:bold; font-size:1.4rem;">${entry.text.split('\n')[0]}</div>
                         <div style="opacity:0.3; font-size:0.8rem;">${new Date(entry.date).toLocaleDateString()}</div>
                         <div class="entry-content">${entry.text.split('\n').slice(1).join('\n')}</div>
-                        ${isAdmin ? '<button class="del-btn" style="color:red; background:none; border:none; margin-top:10px; cursor:pointer;">[DELETE]</button>' : ''}
+                        ${isAdmin ? '<button class="del-btn">[ DELETE ENTRY ]</button>' : ''}
                     `;
                     div.onclick = (e) => {
                         if (e.target.className === 'del-btn') return;
@@ -147,7 +155,7 @@
                     };
                     if (isAdmin) {
                         div.querySelector('.del-btn').onclick = () => {
-                            if(confirm("Delete this?")) remove(ref(db, `entries/${key}`));
+                            if(confirm("Permanently delete this entry?")) remove(ref(db, `entries/${key}`));
                         };
                     }
                     list.appendChild(div);
@@ -155,7 +163,6 @@
             }
         });
 
-        // 5. SAVE ENTRY
         document.getElementById('saveBtn').onclick = () => {
             const ta = document.getElementById('note');
             if (ta.value.trim()) {
