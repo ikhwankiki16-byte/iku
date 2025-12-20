@@ -5,74 +5,130 @@
     <title>iku's journal</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* Ensures the login popup is centered and on top */
         #loginPopup {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #111; padding: 30px; border-radius: 20px; border: 1px solid white; z-index: 9999;
-            flex-direction: column; gap: 10px;
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #111;
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid white;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 10px;
         }
         #loginPopup.open { display: flex !important; }
-        #entries { padding: 50px 20px 150px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
-        .journal-entry { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; cursor: pointer; width: 100%; max-width: 600px; }
+
+        /* Journal entry styling - List format, not floating */
+        #entries { 
+            padding: 100px 20px 150px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 20px; 
+        }
+        .journal-entry { 
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px; 
+            border-radius: 15px; 
+            cursor: pointer; 
+            width: 100%; 
+            max-width: 600px; 
+            border: 1px solid rgba(255,255,255,0.1);
+        }
         .entry-content { display: none; margin-top: 10px; color: #ccc; white-space: pre-wrap; }
         .expanded .entry-content { display: block; }
     </style>
 </head>
 <body>
+
     <div id="editorArea" style="display:none; padding: 20px; text-align: center;">
-        <textarea id="note" style="width: 80%; height: 100px; border-radius: 10px; padding: 10px;"></textarea><br>
-        <button id="saveBtn" class="icon-btn">POST ENTRY</button>
+        <textarea id="note" style="width: 80%; height: 100px; background: #000; color: #fff; border: 1px solid #333; border-radius: 10px; padding: 10px;"></textarea><br>
+        <button id="saveBtn" class="icon-btn" style="margin-top: 10px;">POST ENTRY</button>
     </div>
+
     <div id="entries"></div>
+
     <div id="bottomControls">
         <a class="icon-btn" href="index.html">HOME</a>
         <button id="showLoginBtn" class="icon-btn" style="width: 50px; padding: 0; border-radius: 50%;">🔒</button>
     </div>
+
     <div id="loginPopup">
         <input type="email" id="emailInput" placeholder="Email">
         <input type="password" id="passInput" placeholder="Password">
         <button id="performLoginBtn" class="icon-btn" style="height: 40px; width: 100%;">SIGN IN</button>
         <button onclick="document.getElementById('loginPopup').classList.remove('open')" style="color:white; background:none; border:none; margin-top:10px; cursor:pointer;">CLOSE</button>
     </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
         const firebaseConfig = { 
             apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g", 
             authDomain: "iku-website-iku.firebaseapp.com",
             databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app", 
             projectId: "iku-website-iku" 
         };
+
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
+
         const popup = document.getElementById('loginPopup');
-        document.getElementById('showLoginBtn').onclick = () => popup.classList.toggle('open');
+        const showLoginBtn = document.getElementById('showLoginBtn');
+
+        // Toggle Login Popup
+        showLoginBtn.onclick = () => popup.classList.toggle('open');
+
+        // Check Admin Auth Status
         onAuthStateChanged(auth, (user) => {
             document.getElementById('editorArea').style.display = user ? 'block' : 'none';
-            document.getElementById('showLoginBtn').innerHTML = user ? '🔓' : '🔒';
+            showLoginBtn.innerHTML = user ? '🔓' : '🔒';
         });
+
+        // Login Logic
         document.getElementById('performLoginBtn').onclick = async () => {
             const email = document.getElementById('emailInput').value;
             const pass = document.getElementById('passInput').value;
-            try { await signInWithEmailAndPassword(auth, email, pass); popup.classList.remove('open'); } catch (e) { alert("Fail"); }
+            try { 
+                await signInWithEmailAndPassword(auth, email, pass); 
+                popup.classList.remove('open'); 
+            } catch (e) { alert("Incorrect credentials."); }
         };
+
+        // Load Journal Entries from Firebase
         onValue(ref(db, 'entries'), (snapshot) => {
-            const list = document.getElementById('entries'); list.innerHTML = '';
+            const list = document.getElementById('entries');
+            list.innerHTML = '';
             const data = snapshot.val();
             if (data) {
                 Object.keys(data).reverse().forEach(key => {
                     const entry = data[key];
-                    const div = document.createElement('div'); div.className = 'journal-entry';
+                    const div = document.createElement('div');
+                    div.className = 'journal-entry';
                     div.innerHTML = `<strong>${entry.text.split('\n')[0]}</strong><div class="entry-content">${entry.text}</div>`;
-                    div.onclick = () => div.classList.toggle('expanded');
+                    div.onclick = () => div.classList.toggle('expanded'); // Click to expand
                     list.appendChild(div);
                 });
             }
         });
+
+        // Save New Entry to Firebase
         document.getElementById('saveBtn').onclick = () => {
             const val = document.getElementById('note').value;
-            if(val) { push(ref(db, 'entries'), { text: val, date: new Date().toISOString() }); document.getElementById('note').value = ''; }
+            if(val.trim()) { 
+                push(ref(db, 'entries'), { 
+                    text: val, 
+                    date: new Date().toISOString() 
+                }); 
+                document.getElementById('note').value = ''; 
+            }
         };
     </script>
 </body>
