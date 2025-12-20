@@ -1,37 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/svg" href="iku.svg">
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
     <title>fragments | iku</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        body { overflow: hidden; height: 100vh; width: 100vw; }
+        /* FORCE BLACK OUTER BACKGROUND & PREVENT WHITE EDGE */
+        html { 
+            background-color: #000000 !important; 
+            overflow: hidden; 
+            height: 100vh; 
+            width: 100vw; 
+            margin: 0;
+            padding: 0;
+        }
+
+        body { 
+            margin: 0; 
+            padding: 0;
+            background: transparent !important; 
+            overflow: hidden; 
+            height: 100vh; 
+            width: 100vw;
+            position: fixed; /* Prevents elastic scrolling on mobile */
+        }
+
+        #void { 
+            width: 100vw; 
+            height: 100vh; 
+            position: relative; 
+        }
+
         .fragment-text {
-            position: absolute; color: rgba(255, 255, 255, 0.4);
-            font-family: 'Georgia', serif; font-style: italic;
-            white-space: nowrap; cursor: default; user-select: none;
-            z-index: 10; will-change: transform;
+            position: absolute; 
+            color: rgba(255, 255, 255, 0.4);
+            font-family: 'Georgia', serif; 
+            font-style: italic;
+            white-space: nowrap; 
+            cursor: default; 
+            user-select: none;
+            z-index: 10; 
+            will-change: transform;
+        }
+
+        /* Ensuring bottom controls are visible over the void */
+        #bottomControls {
+            z-index: 100;
         }
     </style>
 </head>
 <body>
     <div id="void"></div>
-    <div id="bottomControls"><a class="icon-btn" href="index.html">🏠 HOME</a></div>
+    
+    <div id="bottomControls">
+        <a class="icon-btn" href="index.html">🏠 HOME</a>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
         const firebaseConfig = { 
             apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g", 
             authDomain: "iku-website-iku.firebaseapp.com",
             databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app", 
             projectId: "iku-website-iku" 
         };
+
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const container = document.getElementById('void');
         let wordsArray = [];
         let mouse = { x: -1000, y: -1000 };
-        window.onmousemove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY; };
+
+        // Mouse Move
+        window.onmousemove = (e) => { 
+            mouse.x = e.clientX; 
+            mouse.y = e.clientY; 
+        };
+
+        // Touch support for mobile dodging
+        window.ontouchmove = (e) => {
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+        };
+
         onValue(ref(db, 'entries'), (snapshot) => {
             const data = snapshot.val();
             if (!data) return;
@@ -39,31 +95,59 @@
             wordsArray = [];
             let text = "";
             Object.values(data).forEach(e => text += " " + e.text);
-            const words = [...new Set(text.split(/\s+/))].filter(w => w.length > 3).slice(0, 45);
+            
+            // Generate unique word set
+            const words = [...new Set(text.split(/\s+/))]
+                          .filter(w => w.length > 3)
+                          .slice(0, 45);
+
             words.forEach(word => {
                 const el = document.createElement('div');
-                el.className = 'fragment-text'; el.innerText = word;
-                const obj = { el, x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4 };
+                el.className = 'fragment-text'; 
+                el.innerText = word;
+                const obj = { 
+                    el, 
+                    x: Math.random() * window.innerWidth, 
+                    y: Math.random() * window.innerHeight, 
+                    vx: (Math.random() - 0.5) * 0.4, 
+                    vy: (Math.random() - 0.5) * 0.4 
+                };
                 container.appendChild(el);
                 wordsArray.push(obj);
             });
         });
+
         function animate() {
             wordsArray.forEach(w => {
-                w.x += w.vx; w.y += w.vy;
-                const dx = w.x - mouse.x, dy = w.y - mouse.y;
+                w.x += w.vx; 
+                w.y += w.vy;
+                
+                const dx = w.x - mouse.x;
+                const dy = w.y - mouse.y;
                 const dist = Math.sqrt(dx*dx + dy*dy);
+                
                 if (dist < 150) {
                     const angle = Math.atan2(dy, dx);
-                    w.x += Math.cos(angle) * 6; w.y += Math.sin(angle) * 6;
+                    w.x += Math.cos(angle) * 6; 
+                    w.y += Math.sin(angle) * 6;
                 }
-                if (w.x > window.innerWidth) w.x = 0; if (w.x < 0) w.x = window.innerWidth;
-                if (w.y > window.innerHeight) w.y = 0; if (w.y < 0) w.y = window.innerHeight;
+
+                // Screen Wrap
+                if (w.x > window.innerWidth) w.x = 0; 
+                if (w.x < 0) w.x = window.innerWidth;
+                if (w.y > window.innerHeight) w.y = 0; 
+                if (w.y < 0) w.y = window.innerHeight;
+                
                 w.el.style.transform = `translate(${w.x}px, ${w.y}px)`;
             });
             requestAnimationFrame(animate);
         }
         animate();
+
+        // Prevent mobile pull-to-refresh
+        document.addEventListener('touchmove', (e) => {
+            if(e.touches.length <= 1) e.preventDefault();
+        }, { passive: false });
     </script>
 </body>
 </html>
