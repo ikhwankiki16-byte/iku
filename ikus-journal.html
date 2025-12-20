@@ -16,9 +16,8 @@
     .title-header { width: 100%; text-align: center; padding: 60px 20px 20px 20px; }
     h1 { margin: 0; font-weight: 300; letter-spacing: 6px; text-transform: lowercase; font-size: 2rem; color: #ffffff !important; opacity: 0.9; }
     
-    .journal-container { max-width: 900px; width: 95%; margin: 0 auto; padding-bottom: 150px; }
+    .journal-container { max-width: 1000px; width: 95%; margin: 0 auto; padding-bottom: 150px; }
     
-    /* Input Area Styling */
     #editorArea { margin-bottom: 40px; }
     textarea#note {
       width: 100%; padding: 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); 
@@ -30,31 +29,62 @@
     /* GRID SYSTEM */
     #entries {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Creates columns automatically */
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 20px;
       align-items: start;
     }
 
     .journal-entry { 
       background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08); padding: 25px; border-radius: 24px; 
-      position: relative; transition: transform 0.3s ease, background 0.3s ease;
-      display: flex; flex-direction: column;
+      border: 1px solid rgba(255, 255, 255, 0.08); padding: 20px; border-radius: 24px; 
+      position: relative; transition: all 0.3s ease;
+      cursor: pointer; overflow: hidden;
     }
     
     .journal-entry:hover {
-      transform: translateY(-5px);
       background: rgba(255, 255, 255, 0.06);
       border-color: rgba(255, 255, 255, 0.2);
     }
 
-    .journal-entry::before { content: ""; position: absolute; left: 0; top: 25px; height: 30px; width: 4px; background: #fff; border-radius: 0 4px 4px 0; }
-    .entry-date { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-bottom: 12px; letter-spacing: 1px; }
-    .entry-content { white-space: pre-wrap; font-family: 'Courier New', monospace; line-height: 1.6; color: rgba(255,255,255,0.9); font-size: 0.95rem; }
-    
-    .delete-btn { position: absolute; top: 15px; right: 15px; color: #ff4444; background: none; border: 1px solid rgba(255, 68, 68, 0.3); border-radius: 8px; cursor: pointer; font-size: 9px; padding: 3px 6px; font-weight: bold; }
-    
-    /* Bottom Controls */
+    /* Expanding Logic Styles */
+    .entry-content { 
+      display: none; /* Hidden by default */
+      margin-top: 15px;
+      white-space: pre-wrap; 
+      font-family: 'Courier New', monospace; 
+      line-height: 1.6; 
+      color: rgba(255,255,255,0.8); 
+      font-size: 0.9rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 15px;
+    }
+
+    .journal-entry.expanded .entry-content {
+      display: block;
+    }
+
+    .entry-title {
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: #fff;
+      margin-bottom: 5px;
+      padding-right: 30px;
+      display: block;
+    }
+
+    .entry-date { font-size: 0.7rem; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
+
+    /* Expand Icon */
+    .expand-icon {
+      position: absolute; right: 20px; top: 25px;
+      font-size: 1.2rem; color: rgba(255,255,255,0.3);
+      transition: transform 0.3s;
+    }
+    .expanded .expand-icon { transform: rotate(45deg); color: #fff; }
+
+    .delete-btn { position: absolute; bottom: 15px; right: 15px; color: #ff4444; background: none; border: 1px solid rgba(255, 68, 68, 0.3); border-radius: 8px; cursor: pointer; font-size: 9px; padding: 3px 6px; font-weight: bold; display: none; }
+    .expanded .delete-btn { display: block; }
+
     #bottomControls { position: fixed; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; gap: 12px; z-index: 1000; }
     .icon-btn, .lock-btn { background: white; color: black; border: none; border-radius: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center; height: 48px; text-decoration: none; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
     .icon-btn { width: 140px; gap: 8px; } .lock-btn { width: 48px; }
@@ -62,10 +92,7 @@
     #loginPopup { position: absolute; bottom: 80px; background: rgba(17, 17, 17, 0.95); backdrop-filter: blur(20px); border: 1px solid #333; padding: 20px; border-radius: 20px; display: none; flex-direction: column; gap: 10px; width: 250px; }
     #loginPopup input { background: #000; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; width: 100%; outline: none; }
 
-    /* Mobile tweak: make entries full width if the screen is too small */
-    @media (max-width: 650px) {
-      #entries { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 650px) { #entries { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -74,7 +101,7 @@
   
   <div class="journal-container">
     <div id="editorArea" style="display:none;">
-      <textarea id="note" rows="5" placeholder="write something..."></textarea>
+      <textarea id="note" rows="5" placeholder="Title (first line)&#10;Content (rest of the note)..."></textarea>
       <button id="saveBtn">SAVE ENTRY</button>
     </div>
 
@@ -127,32 +154,46 @@
       if (data) {
         Object.keys(data).reverse().forEach(key => {
           const entry = data[key];
+          
+          // Split content into Title (first line) and Body
+          const lines = entry.text.split('\n');
+          const titleText = lines[0];
+          const bodyText = lines.slice(1).join('\n');
+
           const div = document.createElement('div');
           div.className = 'journal-entry';
+          
           let delBtn = isAdmin ? `<button class="delete-btn">DELETE</button>` : '';
           
           div.innerHTML = `
-            ${delBtn}
+            <span class="expand-icon">+</span>
+            <span class="entry-title">${escapeHTML(titleText)}</span>
             <div class="entry-date">${new Date(entry.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</div>
-            <div class="entry-content">${escapeHTML(entry.text)}</div>
+            <div class="entry-content">${escapeHTML(bodyText || "No additional content.")}</div>
+            ${delBtn}
           `;
-          list.appendChild(div);
+
+          // Toggle Expand
+          div.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-btn')) return;
+            div.classList.toggle('expanded');
+          });
 
           if (isAdmin) {
             div.querySelector('.delete-btn').addEventListener('click', () => {
               if (confirm("Delete?")) remove(ref(db, `entries/${key}`));
             });
           }
+
+          list.appendChild(div);
         });
       }
     });
 
+    // Auth & Save logic remains same as previous robust version
     document.getElementById('showLoginBtn').addEventListener('click', async () => {
       if (isAdmin) {
-        if (confirm("Logout?")) {
-          await signOut(auth);
-          window.location.reload(); 
-        }
+        if (confirm("Logout?")) { await signOut(auth); window.location.reload(); }
       } else {
         const p = document.getElementById('loginPopup');
         p.style.display = (p.style.display === 'flex') ? 'none' : 'flex';
@@ -160,11 +201,8 @@
     });
 
     document.getElementById('performLoginBtn').addEventListener('click', async () => {
-      const email = document.getElementById('emailInput').value;
-      const pass = document.getElementById('passInput').value;
       try {
-        await signInWithEmailAndPassword(auth, email, pass);
-        document.getElementById('loginPopup').style.display = 'none';
+        await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value);
         window.location.reload(); 
       } catch (e) { alert("Login failed."); }
     });
