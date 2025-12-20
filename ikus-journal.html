@@ -1,464 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="icon" type="image/svg" href="iku.svg">
+  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#050505">
   <title>iku's journal</title>
-
   <style>
-    body {
-      background: radial-gradient(circle at center, #0b1c2d 0%, #000 100%) no-repeat fixed;
-      color: white;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    html { background-color: #000000; }
+    body { 
+      background: radial-gradient(circle at center, #0b1c2d 0%, #05070a 60%, #000000 100%) !important;
+      color: white; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-y: auto; font-family: Arial, sans-serif;
     }
-    h1 {
-      font-weight: 300;
-      letter-spacing: 6px;
-      margin-top: 60px;
-      opacity: 0.8;
-    }
-    .journal-container {
-      max-width: 600px;
-      width: 90%;
-      padding-bottom: 120px;
-    }
+    h1 { font-weight: 300; letter-spacing: 6px; margin-top: 60px; text-transform: lowercase; opacity: 0.8; }
+    .journal-container { max-width: 600px; width: 95%; margin: 20px auto; padding-bottom: 150px; box-sizing: border-box; }
+    
     textarea#note {
-      width: 100%;
-      padding: 20px;
-      border-radius: 24px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(10px);
-      color: #fff;
-      font-family: 'Courier New', monospace;
-      font-size: 16px;
-      resize: none;
-      outline: none;
-      box-sizing: border-box;
+      width: 100%; box-sizing: border-box; padding: 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); 
+      background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      color: #fff; font-family: 'Courier New', monospace; font-size: 16px; resize: none; outline: none;
     }
     #saveBtn {
-      width: 100%;
-      margin-top: 15px;
-      border-radius: 20px;
-      font-weight: 800;
-      padding: 14px;
-      background: white;
-      color: black;
-      border: none;
-      cursor: pointer;
+      width: 100%; margin-top: 15px; border-radius: 20px; font-weight: 800; padding: 14px; 
+      background: white; color: black; border: none; cursor: pointer; font-family: Arial, sans-serif !important;
     }
-    .journal-entry {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      padding: 25px 25px 25px 35px;
-      border-radius: 24px;
-      margin-top: 20px;
-      position: relative;
-    }
-    .journal-entry::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 15%;
-      height: 70%;
-      width: 4px;
-      background: #fff;
-      border-radius: 0 4px 4px 0;
-      box-shadow: 0 0 15px rgba(255,255,255,0.5);
-    }
-    .entry-date {
-      font-size: 0.7rem;
-      color: rgba(255,255,255,0.4);
-      margin-bottom: 10px;
-      letter-spacing: 1px;
-    }
-    .entry-content {
-      white-space: pre-wrap;
-      font-family: 'Courier New', monospace;
-      line-height: 1.6;
-    }
-    .delete-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      color: #ff4444;
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 0.7rem;
-      font-weight: bold;
-    }
-    #bottomControls {
-      position: fixed;
-      bottom: 30px;
-      display: flex;
-      gap: 12px;
-    }
-    .icon-btn,
-    .lock-btn {
-      background: white;
-      color: black;
-      border: none;
-      border-radius: 20px;
-      font-weight: 800;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      cursor: pointer;
-    }
-    .icon-btn { width: 140px; gap: 8px; }
-    .lock-btn { width: 48px; }
-
-    #loginPopup {
-      position: absolute;
-      bottom: 70px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #111;
-      border: 1px solid #333;
-      padding: 20px;
-      border-radius: 20px;
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-      width: 250px;
-    }
-    #loginPopup input {
-      background: #222;
-      border: 1px solid #444;
-      color: white;
-      padding: 12px;
-      border-radius: 10px;
-    }
-  </style>
-</head>
-
-<body>
-  <h1>iku's journal</h1>
-
-  <div class="journal-container">
-    <div id="editorArea" style="display:none;">
-      <textarea id="note" rows="5" placeholder="write something..."></textarea>
-      <button id="saveBtn">SAVE ENTRY</button>
-    </div>
-
-    <div id="entries"></div>
-
-    <div id="bottomControls">
-      <a class="icon-btn" href="index.html">🏠 HOME</a>
-      <button id="showLoginBtn" class="lock-btn">🔒</button>
-      <button id="logoutBtn" class="lock-btn" style="display:none;">🔓</button>
-
-      <div id="loginPopup">
-        <input type="email" id="emailInput" placeholder="email" />
-        <input type="password" id="passInput" placeholder="password" />
-        <button id="performLoginBtn"
-          style="background:white;color:black;border:none;padding:10px;border-radius:10px;font-weight:bold;">
-          LOGIN
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g",
-      databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "iku-website-iku"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
-
-    let currentUser = null;
-
-    const editorArea = document.getElementById("editorArea");
-    const entriesDiv = document.getElementById("entries");
-    const loginPopup = document.getElementById("loginPopup");
-
-    onAuthStateChanged(auth, user => {
-      currentUser = user;
-      editorArea.style.display = user ? "block" : "none";
-      document.getElementById("logoutBtn").style.display = user ? "flex" : "none";
-      document.getElementById("showLoginBtn").style.display = user ? "none" : "flex";
-    });
-
-    onValue(ref(db, "entries"), snapshot => {
-      entriesDiv.innerHTML = "";
-      const data = snapshot.val();
-      if (!data) return;
-
-      Object.entries(data).reverse().forEach(([id, entry]) => {
-        const wrapper = document.createElement("div");
-        wrapper.className = "journal-entry";
-
-        const date = document.createElement("div");
-        date.className = "entry-date";
-        date.textContent = new Date(entry.date).toLocaleString();
-
-        const content = document.createElement("div");
-        content.className = "entry-content";
-        content.textContent = entry.text;
-
-        wrapper.append(date, content);
-
-        if (currentUser) {
-          const del = document.createElement("button");
-          del.className = "delete-btn";
-          del.textContent = "DEL";
-          del.onclick = () => {
-            if (confirm("Delete?")) {
-              remove(ref(db, `entries/${id}`));
-            }
-          };
-          wrapper.appendChild(del);
-        }
-
-        entriesDiv.appendChild(wrapper);
-      });
-    });
-
-    document.getElementById("saveBtn").onclick = () => {
-      const ta = document.getElementById("note");
-      const text = ta.value.trim();
-      if (!text) return;
-
-      push(ref(db, "entries"), {
-        date: new Date().toISOString(),
-        text
-      });
-
-      ta.value = "";
-    };
-
-    document.getElementById("showLoginBtn").onclick = () => {
-      loginPopup.style.display = loginPopup.style.display === "flex" ? "none" : "flex";
-    };
-
-    document.getElementById("performLoginBtn").onclick = async () => {
-      try {
-        await signInWithEmailAndPassword(
-          auth,
-          document.getElementById("emailInput").value,
-          document.getElementById("passInput").value
-        );
-        loginPopup.style.display = "none";
-      } catch {
-        alert("Login failed");
-      }
-    };
-
-    document.getElementById("logoutBtn").onclick = () => signOut(auth);
-  </script>
-</body>
-</html>    .icon-btn { width: 140px; gap: 8px; } .lock-btn { width: 48px; }
-    #loginPopup { position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); background: #111; border: 1px solid #333; padding: 20px; border-radius: 20px; display: none; flex-direction: column; gap: 10px; width: 250px; }
-    #loginPopup input { background: #222; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; }
-  </style>
-</head>
-<body>
-  <h1>iku's journal</h1>
-  <div class="journal-container">
-    <div id="editorArea" style="display:none;">
-      <textarea id="note" rows="5" placeholder="write something..."></textarea>
-      <button id="saveBtn">SAVE ENTRY</button>
-    </div>
-    <div id="entries"></div>
-    <div id="bottomControls">
-      <a class="icon-btn" href="index.html">🏠 HOME</a>
-      <button id="showLoginBtn" class="lock-btn">🔒</button>
-      <button id="logoutBtn" class="lock-btn" style="display:none;">🔓</button>
-      <div id="loginPopup">
-        <input type="email" id="emailInput" placeholder="email">
-        <input type="password" id="passInput" placeholder="password">
-        <button id="performLoginBtn" style="background:white;color:black;border:none;padding:10px;border-radius:10px;font-weight:bold;">LOGIN</button>
-      </div>
-    </div>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-    const firebaseConfig = { 
-      apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g", 
-      databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app", 
-      projectId: "iku-website-iku" 
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
-    let currentUser = null;
-
-    onAuthStateChanged(auth, user => {
-      currentUser = user;
-      document.getElementById('editorArea').style.display = user ? 'block' : 'none';
-      document.getElementById('logoutBtn').style.display = user ? 'flex' : 'none';
-      document.getElementById('showLoginBtn').style.display = user ? 'none' : 'flex';
-    });
-
-    onValue(ref(db, 'entries'), s => {
-      const list = document.getElementById('entries');
-      list.innerHTML = '';
-      const data = s.val() || {};
-      Object.keys(data).reverse().forEach(k => {
-        const div = document.createElement('div');
-        div.className = 'journal-entry';
-        const del = currentUser ? `<button class="delete-btn" onclick="deleteEntry('${k}')">DEL</button>` : '';
-        div.innerHTML = `${del}<div class="entry-date">${new Date(data[k].date).toLocaleString()}</div><div class="entry-content">${data[k].text}</div>`;
-        list.appendChild(div);
-      });
-    });
-
-    window.deleteEntry = (id) => { if(confirm("Delete?")) remove(ref(db, `entries/${id}`)); };
-    document.getElementById('saveBtn').onclick = () => {
-      const ta = document.getElementById('note');
-      if(ta.value) { push(ref(db, 'entries'), { date: new Date().toISOString(), text: ta.value }); ta.value = ''; }
-    };
-    document.getElementById('showLoginBtn').onclick = () => {
-      const p = document.getElementById('loginPopup');
-      p.style.display = p.style.display === 'none' ? 'flex' : 'none';
-    };
-    document.getElementById('performLoginBtn').onclick = async () => {
-      try { await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value); 
-      document.getElementById('loginPopup').style.display = 'none'; } catch { alert("Error"); }
-    };
-    document.getElementById('logoutBtn').onclick = () => signOut(auth);
-  </script>
-</body>
-</html>    /* 2. INPUT AREA */
-    textarea#note {
-      width: 100%; box-sizing: border-box; padding: 20px; border-radius: 24px;
-      border: 1px solid rgba(255,255,255,0.1); background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-      color: #fff; font-family: 'Courier New', monospace; font-size: 16px; 
-      resize: none; outline: none; transition: border 0.3s ease;
-    }
-    textarea#note:focus { border: 1px solid rgba(255,255,255,0.3); }
-
-    #saveBtn {
-      width: 100%; margin-top: 15px; border-radius: 20px; font-weight: 800;
-      padding: 14px; background: white; color: black; border: none; cursor: pointer;
-      font-family: Arial, sans-serif !important; transition: transform 0.2s;
-    }
-    #saveBtn:active { transform: scale(0.98); }
-
-    /* 3. JOURNAL ENTRIES */
     .journal-entry { 
-      background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); 
-      padding: 25px 25px 25px 35px; border-radius: 24px; margin-top: 20px; 
-      position: relative; box-sizing: border-box; animation: fadeInUp 0.6s ease forwards;
-      opacity: 0; overflow: hidden;
+      background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); 
+      padding: 25px 25px 25px 35px; border-radius: 24px; margin-top: 20px; position: relative; overflow: hidden;
     }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* THE MOOD LINE */
     .journal-entry::before {
-      content: ""; position: absolute; left: 0; top: 15%; height: 70%; width: 4px;
-      background: #ffffff; border-radius: 0 4px 4px 0;
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+      content: ""; position: absolute; left: 0; top: 15%; height: 70%; width: 4px; background: #fff; box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
     }
-
-    .journal-entry.mood-warm::before { background: #ffcc33; box-shadow: 0 0 15px #ffcc33; }
-    .journal-entry.mood-deep::before { background: #4488ff; box-shadow: 0 0 15px #4488ff; }
-    .journal-entry.mood-nature::before { background: #44ff88; box-shadow: 0 0 15px #44ff88; }
-    .journal-entry.mood-dreamy::before { background: #bb88ff; box-shadow: 0 0 15px #bb88ff; }
-    .journal-entry.mood-urgent::before { background: #ff4444; box-shadow: 0 0 15px #ff4444; }
-
-    .entry-date { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-bottom: 12px; letter-spacing: 2px; text-transform: uppercase; font-family: Arial, sans-serif !important; }
+    .entry-date { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-bottom: 12px; letter-spacing: 2px; }
     .entry-content { white-space: pre-wrap; font-family: 'Courier New', monospace; line-height: 1.7; font-size: 1rem; color: rgba(255,255,255,0.9); }
-    .delete-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,68,68,0.1); color: #ff4444; border: 1px solid rgba(255,68,68,0.3); border-radius: 10px; padding: 5px 10px; font-size: 0.6rem; cursor: pointer; font-family: Arial, sans-serif !important; }
+    .delete-btn { position: absolute; top: 20px; right: 20px; color: #ff4444; background: none; border: none; cursor: pointer; font-size: 0.7rem; font-family: Arial, sans-serif !important; }
 
-    /* 4. CONTROLS */
-    #bottomControls { position: fixed; bottom: 30px; left: 0; right: 0; display: flex; justify-content: center; gap: 12px; z-index: 1000; padding: 0 16px; box-sizing: border-box; }
-    .icon-btn, .lock-      width: 100%; 
-      box-sizing: border-box; 
-      padding: 20px; 
-      border-radius: 24px;
-      border: 1px solid rgba(255,255,255,0.1); 
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      color: #fff; 
-      font-family: 'Courier New', monospace; 
-      font-size: 16px; 
-      resize: none;
-      outline: none;
-      transition: border 0.3s ease;
-    }
-    textarea#note:focus { border: 1px solid rgba(255,255,255,0.3); }
-
-    #saveBtn {
-      width: 100%; margin-top: 15px; border-radius: 20px; font-weight: 800;
-      padding: 14px; background: white; color: black; border: none; cursor: pointer;
-      font-family: Arial, sans-serif !important; transition: transform 0.2s;
-    }
-
-    .journal-entry { 
-      background: rgba(255, 255, 255, 0.03); 
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08); 
-      padding: 25px 25px 25px 35px;
-      border-radius: 24px; 
-      margin-top: 20px; 
-      position: relative; 
-      box-sizing: border-box; 
-      animation: fadeInUp 0.6s ease forwards;
-      opacity: 0;
-      overflow: hidden;
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .journal-entry::before {
-      content: "";
-      position: absolute;
-      left: 0; top: 15%; height: 70%; width: 4px;
-      background: #ffffff;
-      border-radius: 0 4px 4px 0;
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
-    }
-
-    .journal-entry.mood-warm::before { background: #ffcc33; box-shadow: 0 0 15px #ffcc33; }
-    .journal-entry.mood-deep::before { background: #4488ff; box-shadow: 0 0 15px #4488ff; }
-    .journal-entry.mood-nature::before { background: #44ff88; box-shadow: 0 0 15px #44ff88; }
-    .journal-entry.mood-dreamy::before { background: #bb88ff; box-shadow: 0 0 15px #bb88ff; }
-    .journal-entry.mood-urgent::before { background: #ff4444; box-shadow: 0 0 15px #ff4444; }
-
-    .entry-date { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-bottom: 12px; letter-spacing: 2px; text-transform: uppercase; font-family: Arial, sans-serif !important; }
-    .entry-content { white-space: pre-wrap; font-family: 'Courier New', monospace; line-height: 1.7; font-size: 1rem; color: rgba(255,255,255,0.9); }
-    .delete-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,68,68,0.1); color: #ff4444; border: 1px solid rgba(255,68,68,0.3); border-radius: 10px; padding: 5px 10px; font-size: 0.6rem; cursor: pointer; font-family: Arial, sans-serif !important; }
-
-    #bottomControls { position: fixed; bottom: 30px; left: 0; right: 0; display: flex; justify-content: center; gap: 12px; z-index: 1000; padding: 0 16px; box-sizing: border-box; }
-    .icon-btn, .lock-btn { background: white; color: black; border: none; border-radius: 20px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; height: 48px; box-sizing: border-box; font-family: Arial, sans-serif !important; font-size: 0.9rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-decoration: none; transition: transform 0.2s; }
+    #bottomControls { position: fixed; bottom: 30px; display: flex; justify-content: center; gap: 12px; z-index: 1000; width: 100%; }
+    .icon-btn, .lock-btn { background: white; color: black; border: none; border-radius: 20px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; height: 48px; text-decoration: none; font-size: 0.9rem; }
     .icon-btn { width: 145px; gap: 8px; }
     .lock-btn { width: 48px; cursor: pointer; }
-    .icon-btn:active, .lock-btn:active { transform: scale(0.95); }
-
-    #loginPopup { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(20,20,20,0.95); backdrop-filter: blur(20px); border: 1px solid #333; padding: 25px; border-radius: 24px; display: none; flex-direction: column; gap: 12px; width: 280px; }
+    #loginPopup { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: #111; border: 1px solid #333; padding: 25px; border-radius: 24px; display: none; flex-direction: column; gap: 12px; width: 280px; }
     #loginPopup input { background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 12px; width: 100%; box-sizing: border-box; }
   </style>
 
@@ -473,205 +55,9 @@
       projectId: "iku-website-iku" 
     };
 
-    const app = initializeApp(firebaseConfig); 
-    const db = getDatabase(app); 
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
     const auth = getAuth(app);
-
-    let currentUser = null;
-
-    onAuthStateChanged(auth, user => {
-      currentUser = user;
-      document.getElementById('editorArea').style.display = user ? 'block' : 'none';
-      document.getElementById('logoutBtn').style.display = user ? 'inline-flex' : 'none';
-      document.getElementById('showLoginBtn').style.display = user ? 'none    textarea#note {
-      width: 100%; 
-      box-sizing: border-box; 
-      padding: 20px; 
-      border-radius: 24px;
-      border: 1px solid rgba(255,255,255,0.1); 
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      color: #fff; 
-      font-family: 'Courier New', monospace; 
-      font-size: 16px; 
-      resize: none;
-      outline: none;
-      transition: border 0.3s ease;
-    }
-    textarea#note:focus { border: 1px solid rgba(255,255,255,0.3); }
-
-    #saveBtn {
-      width: 100%; margin-top: 15px; border-radius: 20px; font-weight: 800;
-      padding: 14px; background: white; color: black; border: none; cursor: pointer;
-      font-family: Arial, sans-serif !important; transition: transform 0.2s;
-    }
-    #saveBtn:active { transform: scale(0.98); }
-
-    /* 3. JOURNAL ENTRIES */
-    .journal-entry { 
-      background: rgba(255, 255, 255, 0.03); 
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08); 
-      padding: 25px 25px 25px 35px; /* Space for mood line */
-      border-radius: 24px; 
-      margin-top: 20px; 
-      position: relative; 
-      box-sizing: border-box; 
-      animation: fadeInUp 0.6s ease forwards;
-      opacity: 0;
-      overflow: hidden;
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* THE MOOD LINE */
-    .journal-entry::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 15%;
-      height: 70%;
-      width: 4px;
-      background: #ffffff;
-      border-radius: 0 4px 4px 0;
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
-      transition: all 0.5s ease;
-    }
-
-    /* MOOD COLORS */
-    .journal-entry.mood-warm::before { background: #ffcc33; box-shadow: 0 0 15px #ffcc33; }
-    .journal-entry.mood-deep::before { background: #4488ff; box-shadow: 0 0 15px #4488ff; }      width: 100%; 
-      box-sizing: border-box; 
-      padding: 20px; 
-      border-radius: 24px;
-      border: 1px solid rgba(255,255,255,0.1); 
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      color: #fff; 
-      font-family: 'Courier New', monospace; 
-      font-size: 16px; 
-      resize: none;
-      outline: none;
-    }
-
-    #saveBtn {
-      width: 100%; margin-top: 15px; border-radius: 20px; font-weight: 800;
-      padding: 14px; background: white; color: black; border: none; cursor: pointer;
-      font-family: Arial, sans-serif !important;
-    }
-
-    /* THE JOURNAL ENTRY PANEL */
-    .journal-entry { 
-      background: rgba(255, 255, 255, 0.03); 
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08); 
-      padding: 25px 25px 25px 35px; /* Spaced for the Mood Line */
-      border-radius: 24px; 
-      margin-top: 20px; 
-      position: relative; 
-      box-sizing: border-box; 
-      animation: fadeInUp 0.6s ease forwards;
-      opacity: 0;
-      overflow: hidden;
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* THE MOOD LINE */
-    .journal-entry::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 15%;
-      height: 70%;
-      width: 4px;
-      background: #ffffff;
-      border-radius: 0 4px 4px 0;
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
-      transition: all 0.5s ease;
-    }
-
-    /* MOOD COLORS */
-    .journal-entry.mood-warm::before { background: #ffcc33; box-shadow: 0 0 15px #ffcc33; }
-    .journal-entry.mood-deep::before { background: #4488ff; box-shadow: 0 0 15px #4488ff; }
-    .journal-entry.mood-nature::before { background: #44ff88; box-shadow: 0 0 15px #44ff88; }
-    .journal-entry.mood-dreamy::before { background: #bb88ff; box-shadow: 0 0 15px #bb88ff; }
-    .journal-entry.mood-urgent::before { background: #ff4444; box-shadow: 0 0 15px #ff4444; }
-
-    .entry-date { 
-      font-size: 0.7rem; color: rgba(255,255,255,0.4); 
-      margin-bottom: 12px; letter-spacing: 2px; text-transform: uppercase;
-      font-family: Arial, sans-serif !important;
-    }
-
-    .entry-content { 
-      white-space: pre-wrap; font-family: 'Courier New', monospace; 
-      line-height: 1.7; font-size: 1rem; color: rgba(255,255,255,0.9);
-    }
-
-    .delete-btn { 
-      position: absolute; top: 20px; right: 20px; 
-      background: rgba(255,68,68,0.1); color: #ff4444; 
-      border: 1px solid rgba(255,68,68,0.3); border-radius: 10px; 
-      padding: 5px 10px; font-size: 0.6rem; cursor: pointer; 
-      font-family: Arial, sans-serif !important;
-    }
-
-    /* STANDARDIZED CONTROLS */
-    #bottomControls {
-      position: fixed; bottom: 30px; left: 0; right: 0;
-      display: flex; justify-content: center; gap: 12px; z-index: 1000;
-      padding: 0 16px; box-sizing: border-box;
-    }
-
-    .icon-btn, .lock-btn {
-      background: white; color: black; border: none; border-radius: 20px;
-      font-weight: 800; display: inline-flex; align-items: center;
-      justify-content: center; height: 48px; box-sizing: border-box;
-      font-family: Arial, sans-serif !important; font-size: 0.9rem; 
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-    .icon-btn { width: 145px; gap: 8px; text-decoration: none; }
-    .lock-btn { width: 48px; cursor: pointer; }
-
-    #loginPopup { 
-      position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); 
-      background: rgba(20,20,20,0.95); backdrop-filter: blur(20px);
-      border: 1px solid #333; padding: 25px; border-radius: 24px; 
-      display: none; flex-direction: column; gap: 12px; width: 280px; 
-      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-    }
-    #loginPopup input { 
-      background: #000; border: 1px solid #333; color: white; padding: 12px; 
-      border-radius: 12px; width: 100%; box-sizing: border-box; font-family: Arial, sans-serif;
-    }
-  </style>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-    const firebaseConfig = { 
-      apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g", 
-      databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app", 
-      projectId: "iku-website-iku" 
-    };
-
-    const app = initializeApp(firebaseConfig); 
-    const db = getDatabase(app); 
-    const auth = getAuth(app);
-
     let currentUser = null;
 
     onAuthStateChanged(auth, user => {
@@ -679,72 +65,38 @@
       document.getElementById('editorArea').style.display = user ? 'block' : 'none';
       document.getElementById('logoutBtn').style.display = user ? 'inline-flex' : 'none';
       document.getElementById('showLoginBtn').style.display = user ? 'none' : 'inline-flex';
-      renderEntries();
     });
 
-    let currentData = {};
-    onValue(ref(db, 'entries'), s => { 
-      currentData = s.val() || {}; 
-      renderEntries(); 
-    });
-
-    function renderEntries() {
-      const list = document.getElementById('entries'); 
+    onValue(ref(db, 'entries'), s => {
+      const list = document.getElementById('entries');
       list.innerHTML = '';
-      const keys = Object.keys(currentData).reverse();
-      
-      keys.forEach((k, index) => {
-        const div = document.createElement('div'); 
-        const text = currentData[k].text.toLowerCase();
-        
-        // MOOD DETECTION
-        let moodClass = '';
-        if (text.match(/sun|happy|warm|light|love|gold/)) moodClass = 'mood-warm';
-        else if (text.match(/blue|sad|cold|night|rain|sea|dark/)) moodClass = 'mood-deep';
-        else if (text.match(/green|nature|forest|tree|grass/)) moodClass = 'mood-nature';
-        else if (text.match(/dream|star|magic|purple|sleep/)) moodClass = 'mood-dreamy';
-        else if (text.match(/urgent|angry|fire|help|stop|danger/)) moodClass = 'mood-urgent';
-
-        div.className = `journal-entry ${moodClass}`;
-        div.style.animationDelay = `${index * 0.1}s`;
-        
-        const deleteHtml = currentUser ? `<button class="delete-btn" onclick="window.deleteEntry('${k}')">DEL</button>` : '';
-        const dateStr = new Date(currentData[k].date).toLocaleDateString('en-US', { 
-          month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-        });
-
-        div.innerHTML = `
-          ${deleteHtml}
-          <div class="entry-date">${dateStr}</div>
-          <div class="entry-content">${currentData[k].text}</div>
-        `;
+      const data = s.val() || {};
+      Object.keys(data).reverse().forEach(k => {
+        const div = document.createElement('div');
+        div.className = 'journal-entry';
+        const delBtn = currentUser ? `<button class="delete-btn" onclick="window.deleteEntry('${k}')">DEL</button>` : '';
+        div.innerHTML = `${delBtn}<div class="entry-date">${new Date(data[k].date).toLocaleString()}</div><div class="entry-content">${data[k].text}</div>`;
         list.appendChild(div);
       });
-    }
+    });
 
-    window.deleteEntry = (id) => { 
-      if (confirm("Delete this memory?")) remove(ref(db, `entries/${id}`)); 
-    };
-
+    window.deleteEntry = (id) => { if(confirm("Delete?")) remove(ref(db, `entries/${id}`)); };
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('saveBtn').onclick = () => {
         const ta = document.getElementById('note');
-        if (ta.value) { 
-          push(ref(db, 'entries'), { date: new Date().toISOString(), text: ta.value }); 
-          ta.value = ''; 
-        }
+        if(ta.value) { push(ref(db, 'entries'), { date: new Date().toISOString(), text: ta.value }); ta.value = ''; }
       };
-      document.getElementById('showLoginBtn').onclick = () => { 
-        const p = document.getElementById('loginPopup'); 
-        p.style.display = p.style.display === 'none' ? 'flex' : 'none'; 
+      document.getElementById('showLoginBtn').onclick = () => {
+        const p = document.getElementById('loginPopup');
+        p.style.display = p.style.display === 'none' ? 'flex' : 'none';
       };
       document.getElementById('performLoginBtn').onclick = async () => {
         try { 
           await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value); 
-          document.getElementById('loginPopup').style.display = 'none'; 
+          document.getElementById('loginPopup').style.display = 'none';
         } catch { alert("Failed"); }
       };
-      document.getElementById('logoutBtn').onclick = () => { signOut(auth); };
+      document.getElementById('logoutBtn').onclick = () => signOut(auth);
     });
   </script>
 </head>
@@ -757,285 +109,13 @@
     </div>
     <div id="entries"></div>
     <div id="bottomControls">
-      <a class="icon-btn" href="index.html"><span>🏠</span><span>HOME</span></a>
+      <a class="icon-btn" href="index.html">🏠 HOME</a>
       <button id="showLoginBtn" class="lock-btn">🔒</button>
       <button id="logoutBtn" class="lock-btn" style="display:none;">🔓</button>
       <div id="loginPopup">
         <input type="email" id="emailInput" placeholder="email">
         <input type="password" id="passInput" placeholder="password">
-        <button id="performLoginBtn">LOGIN</button>
-      </div>
-    </div>
-  </div>
-</body>
-</html>    /* Input Area Styling */
-    textarea#note {
-      width: 100%; 
-      box-sizing: border-box; 
-      padding: 20px; 
-      border-radius: 24px;
-      border: 1px solid rgba(255,255,255,0.1); 
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(10px);
-      color: #fff; 
-      font-family: 'Courier New', monospace; 
-      font-size: 16px; 
-      resize: none;
-      outline: none;
-      transition: border 0.3s ease;
-    }
-    textarea#note:focus { border: 1px solid rgba(255,255,255,0.3); }
-
-    #saveBtn {
-      width: 100%; margin-top: 15px; border-radius: 20px; font-weight: 800;
-      padding: 14px; background: white; color: black; border: none; cursor: pointer;
-      font-family: Arial, sans-serif !important; transition: transform 0.2s;
-    }
-    #saveBtn:active { transform: scale(0.98); }
-
-    /* JOURNAL ENTRY ENHANCEMENTS */
-    .journal-entry { 
-      background: rgba(255, 255, 255, 0.03); 
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08); 
-      padding: 25px; 
-      border-radius: 24px; 
-      margin-top: 20px; 
-      position: relative; 
-      box-sizing: border-box; 
-      /* Entry Entrance Animation */
-      animation: fadeInUp 0.6s ease forwards;
-      opacity: 0;
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .entry-date { 
-      font-size: 0.7rem; 
-      color: rgba(255,255,255,0.4); 
-      margin-bottom: 12px; 
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      font-family: Arial, sans-serif !important;
-    }
-
-    .entry-content { 
-      white-space: pre-wrap; 
-      font-family: 'Courier New', monospace; 
-      line-height: 1.7; 
-      font-size: 1rem;
-      color: rgba(255,255,255,0.9);
-    }
-
-    .delete-btn { 
-      position: absolute; top: 20px; right: 20px; 
-      background: rgba(255,68,68,0.1); color: #ff4444; 
-      border: 1px solid rgba(255,68,68,0.3); border-radius: 10px; 
-      padding:      width: 100%; 
-      box-sizing: border-box; 
-      padding: 15px; 
-      border-radius: 20px;
-      border: 1px solid #333; 
-      background: rgba(255, 255, 255, 0.05);
-      color: #fff; 
-      font-family: 'Courier New', monospace; 
-      font-size: 16px; 
-      resize: none;
-    }
-
-    #saveBtn {
-      width: 100%; 
-      margin-top: 12px; 
-      border-radius: 20px; 
-      font-weight: 800;
-      padding: 14px; 
-      background: white; 
-      color: black; 
-      border: none; 
-      cursor: pointer;
-      font-family: Arial, sans-serif !important;
-    }
-
-    .journal-entry { 
-      background: rgba(17, 17, 17, 0.8); 
-      border: 1px solid #333; 
-      padding: 20px; 
-      border-radius: 20px; 
-      margin-top: 15px; 
-      position: relative; 
-      box-sizing: border-box; 
-    }
-
-    .delete-btn { 
-      position: absolute; 
-      top: 15px; 
-      right: 15px; 
-      background: rgba(255,0,0,0.1); 
-      color: #ff4444; 
-      border: 1px solid #ff4444; 
-      border-radius: 10px; 
-      padding: 4px 8px; 
-      font-size: 0.7rem; 
-      cursor: pointer; 
-    }
-
-    .entry-date { font-size: 0.8rem; color: #666; margin-bottom: 8px; }
-    .entry-content { white-space: pre-wrap; font-family: 'Courier New', monospace; line-height: 1.5; }
-
-    /* Standardized Controls - Synced across all pages */
-    #bottomControls {
-      position: fixed; 
-      bottom: 30px; 
-      left: 0; 
-      right: 0;
-      display: flex; 
-      justify-content: center; 
-      gap: 12px; 
-      z-index: 1000;
-      padding: 0 16px; 
-      box-sizing: border-box;
-    }
-
-    .icon-btn, .lock-btn {
-      background: white; 
-      color: black; 
-      border: none; 
-      border-radius: 20px;
-      font-weight: 800; 
-      display: inline-flex; 
-      align-items: center;
-      justify-content: center; 
-      height: 48px; 
-      box-sizing: border-box;
-      /* FORCED FONT SYNC */
-      font-family: Arial, sans-serif !important; 
-      font-size: 0.9rem; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      transition: transform 0.2s ease;
-    }
-
-    .icon-btn { width: 145px; gap: 8px; text-decoration: none; }
-    .lock-btn { width: 48px; cursor: pointer; }
-    
-    .icon-btn:active, .lock-btn:active { transform: scale(0.95); }
-
-    #loginPopup { 
-      position: absolute; 
-      bottom: 70px; 
-      left: 50%; 
-      transform: translateX(-50%); 
-      background: #111; 
-      border: 1px solid #333; 
-      padding: 20px; 
-      border-radius: 20px; 
-      display: none; 
-      flex-direction: column; 
-      gap: 12px; 
-      width: 260px; 
-      box-sizing: border-box; 
-    }
-
-    #loginPopup input { 
-      background: #222; 
-      border: 1px solid #444; 
-      color: white; 
-      padding: 12px; 
-      border-radius: 10px; 
-      width: 100%; 
-      box-sizing: border-box; 
-      font-family: Arial, sans-serif;
-    }
-  </style>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-    const firebaseConfig = { 
-      apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g", 
-      databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app", 
-      projectId: "iku-website-iku" 
-    };
-
-    const app = initializeApp(firebaseConfig); 
-    const db = getDatabase(app); 
-    const auth = getAuth(app);
-
-    let currentUser = null;
-
-    onAuthStateChanged(auth, user => {
-      currentUser = user;
-      document.getElementById('editorArea').style.display = user ? 'block' : 'none';
-      document.getElementById('logoutBtn').style.display = user ? 'inline-flex' : 'none';
-      document.getElementById('showLoginBtn').style.display = user ? 'none' : 'inline-flex';
-      renderEntries();
-    });
-
-    let currentData = {};
-    onValue(ref(db, 'entries'), s => { 
-      currentData = s.val() || {}; 
-      renderEntries(); 
-    });
-
-    function renderEntries() {
-      const list = document.getElementById('entries'); 
-      list.innerHTML = '';
-      Object.keys(currentData).reverse().forEach(k => {
-        const div = document.createElement('div'); 
-        div.className = 'journal-entry';
-        const deleteHtml = currentUser ? `<button class="delete-btn" onclick="window.deleteEntry('${k}')">DEL</button>` : '';
-        div.innerHTML = `${deleteHtml}<div class="entry-date">${new Date(currentData[k].date).toLocaleString()}</div><div class="entry-content">${currentData[k].text}</div>`;
-        list.appendChild(div);
-      });
-    }
-
-    window.deleteEntry = (id) => { 
-      if (confirm("Delete this memory?")) remove(ref(db, `entries/${id}`)); 
-    };
-
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('saveBtn').onclick = () => {
-        const ta = document.getElementById('note');
-        if (ta.value) { 
-          push(ref(db, 'entries'), { date: new Date().toISOString(), text: ta.value }); 
-          ta.value = ''; 
-        }
-      };
-      document.getElementById('showLoginBtn').onclick = () => { 
-        const p = document.getElementById('loginPopup'); 
-        p.style.display = p.style.display === 'none' ? 'flex' : 'none'; 
-      };
-      document.getElementById('performLoginBtn').onclick = async () => {
-        try { 
-          await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value); 
-          document.getElementById('loginPopup').style.display = 'none'; 
-        } catch { alert("Failed"); }
-      };
-      document.getElementById('logoutBtn').onclick = () => { signOut(auth); };
-    });
-  </script>
-</head>
-<body>
-  <h1>iku's journal</h1>
-  <div class="journal-container">
-    <div id="editorArea" style="display:none;">
-      <textarea id="note" rows="5" placeholder="Write something..."></textarea>
-      <button id="saveBtn">Save Entry</button>
-    </div>
-    <div id="entries"></div>
-    <div id="bottomControls">
-      <a class="icon-btn" href="index.html"><span>🏠</span><span>HOME</span></a>
-      <button id="showLoginBtn" class="lock-btn">🔒</button>
-      <button id="logoutBtn" class="lock-btn" style="display:none;">🔓</button>
-      <div id="loginPopup">
-        <input type="email" id="emailInput" placeholder="Email">
-        <input type="password" id="passInput" placeholder="Password">
-        <button id="performLoginBtn" style="background:white; color:black; border:none; padding:10px; border-radius:10px; font-weight:bold; cursor:pointer;">Login</button>
+        <button id="performLoginBtn" style="background:white; color:black; border:none; padding:10px; border-radius:10px; font-weight:bold;">LOGIN</button>
       </div>
     </div>
   </div>
