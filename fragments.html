@@ -8,31 +8,27 @@
     <title>fragments | iku</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* FORCE BLACK OUTER BACKGROUND & PREVENT WHITE EDGE */
-        html { 
-            background-color: #000000 !important; 
-            overflow: hidden; 
-            height: 100vh; 
-            width: 100vw; 
+        /* Lock the viewport */
+        html, body {
             margin: 0;
             padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            /* Allow style.css gradient to show */
+            background: transparent !important; 
         }
 
-        body { 
-            margin: 0; 
-            padding: 0;
-            background: transparent !important; 
-            overflow: hidden; 
-            height: 100vh; 
-            width: 100vw;
-            position: fixed; 
+        body {
+            position: fixed;
         }
 
         #void { 
             width: 100vw; 
             height: 100vh; 
             position: relative; 
-            background-color: #000000;
+            /* Transparent so style.css background shows through */
+            background: transparent; 
         }
 
         .fragment-text {
@@ -76,7 +72,11 @@
         let wordsArray = [];
         let mouse = { x: -1000, y: -1000 };
 
-        window.onmousemove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY; };
+        window.onmousemove = (e) => { 
+            mouse.x = e.clientX; 
+            mouse.y = e.clientY; 
+        };
+
         window.ontouchmove = (e) => {
             mouse.x = e.touches[0].clientX;
             mouse.y = e.touches[0].clientY;
@@ -102,9 +102,9 @@
                     el, 
                     x: Math.random() * window.innerWidth, 
                     y: Math.random() * window.innerHeight, 
-                    vx: (Math.random() - 0.5) * 0.4, 
-                    vy: (Math.random() - 0.5) * 0.4,
-                    rotation: (Math.random() - 0.5) * 30 // Random starting tilt
+                    vx: (Math.random() - 0.5) * 0.3, 
+                    vy: (Math.random() - 0.5) * 0.3,
+                    rotation: (Math.random() - 0.5) * 20
                 };
                 container.appendChild(el);
                 wordsArray.push(obj);
@@ -122,8 +122,8 @@
                 
                 if (dist < 150) {
                     const angle = Math.atan2(dy, dx);
-                    w.x += Math.cos(angle) * 6; 
-                    w.y += Math.sin(angle) * 6;
+                    w.x += Math.cos(angle) * 5; 
+                    w.y += Math.sin(angle) * 5;
                 }
 
                 if (w.x > window.innerWidth) w.x = 0; 
@@ -131,7 +131,6 @@
                 if (w.y > window.innerHeight) w.y = 0; 
                 if (w.y < 0) w.y = window.innerHeight;
                 
-                // Rotation included in the transform
                 w.el.style.transform = `translate(${w.x}px, ${w.y}px) rotate(${w.rotation}deg)`;
             });
             requestAnimationFrame(animate);
