@@ -1,11 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/svg" href="iku.svg">
     <meta charset="UTF-8">
-    <title>iku's game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <title>void runner | iku</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        /* FORCE BLACK OUTER BACKGROUND */
+        html { 
+            background-color: #000000 !important; 
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body { 
+            margin: 0;
+            padding: 0;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            overflow: hidden; 
+            background: transparent !important;
+            position: fixed; /* Prevents mobile bounce */
+            width: 100%;
+        }
+
         canvas {
             background: rgba(0, 0, 0, 0.8);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -14,13 +39,27 @@
             max-height: 65vh;
             cursor: pointer;
             z-index: 10;
+            touch-action: none; /* Prevents scrolling while playing */
         }
-        h1 { font-weight: 200; letter-spacing: 5px; margin-bottom: 20px; opacity: 0.6; }
+
+        h1 { 
+            font-weight: 200; 
+            letter-spacing: 5px; 
+            margin-bottom: 20px; 
+            opacity: 0.6; 
+            color: white;
+            font-family: sans-serif;
+        }
+
+        #bottomControls {
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
     <h1>VOID RUNNER</h1>
     <canvas id="gameCanvas"></canvas>
+    
     <div id="bottomControls">
         <a class="icon-btn" href="index.html">🏠 HOME</a>
     </div>
@@ -28,28 +67,57 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = 800; canvas.height = 400;
-        let playerY = 200; let isStarted = false;
+        canvas.width = 800; 
+        canvas.height = 400;
+        
+        let playerY = 200; 
+        let isStarted = false;
 
-        canvas.addEventListener('mousedown', () => { isStarted = true; playerY -= 60; });
+        // Unified Jump Function
+        function jump(e) {
+            e.preventDefault();
+            isStarted = true; 
+            playerY -= 60;
+        }
+
+        // Mouse and Touch listeners
+        canvas.addEventListener('mousedown', jump);
+        canvas.addEventListener('touchstart', jump, { passive: false });
 
         function loop() {
+            // Motion blur effect
             ctx.fillStyle = "rgba(0,0,0,0.3)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            if (playerY < canvas.height - 40) playerY += 3;
-            if (playerY < 10) playerY = 10;
+            
+            // Gravity
+            if (isStarted) {
+                if (playerY < canvas.height - 40) playerY += 3;
+                if (playerY < 10) playerY = 10;
+            }
 
-            ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
+            // Draw Player with Neon Glow
+            ctx.shadowBlur = 15; 
+            ctx.shadowColor = "#00f2ff";
             ctx.fillStyle = "#00f2ff";
             ctx.fillRect(100, playerY, 30, 30);
             ctx.shadowBlur = 0;
 
+            // Start Text
             if(!isStarted) {
-                ctx.fillStyle = "white"; ctx.font = "16px Arial"; ctx.textAlign = "center";
-                ctx.fillText("CLICK TO JUMP", canvas.width/2, canvas.height/2);
+                ctx.fillStyle = "white"; 
+                ctx.font = "18px Arial"; 
+                ctx.textAlign = "center";
+                ctx.fillText("CLICK OR TAP TO JUMP", canvas.width/2, canvas.height/2);
             }
+            
             requestAnimationFrame(loop);
         }
+
+        // Prevent mobile pull-to-refresh on the whole page
+        document.addEventListener('touchmove', (e) => {
+            if(e.touches.length <= 1) e.preventDefault();
+        }, { passive: false });
+
         loop();
     </script>
 </body>
