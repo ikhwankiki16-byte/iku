@@ -20,15 +20,18 @@
             padding: 30px; border-radius: 40px; text-align: center;
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
         }
-        h1 { font-weight: 200; letter-spacing: 6px; margin-bottom: 20px; font-size: 1.5rem; opacity: 0.8; }
-        #score { font-family: 'Courier New', monospace; font-size: 2.5rem; margin-bottom: 20px; display: block; }
+        h1 { font-weight: 200; letter-spacing: 6px; margin-bottom: 10px; font-size: 1.2rem; opacity: 0.6; }
+        #score { font-family: 'Courier New', monospace; font-size: 3rem; margin-bottom: 5px; display: block; font-weight: bold; }
+        .high-score-label { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        
         canvas {
             background: rgba(0, 0, 0, 0.4);
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.05);
-            touch-action: none; /* Prevents scrolling while playing on mobile */
+            touch-action: none;
         }
         .controls { margin-top: 20px; font-size: 0.8rem; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
+        
         .back-btn {
             margin-top: 30px; text-decoration: none; color: black; background: white;
             padding: 12px 30px; border-radius: 50px; font-weight: 800; font-size: 0.8rem;
@@ -42,16 +45,22 @@
     <div class="game-container">
         <h1>Mini Break</h1>
         <span id="score">0</span>
-        <canvas id="gameCanvas" width="350" height="500"></canvas>
+        <div class="high-score-label">Best: <span id="highScore">0</span></div>
+        <canvas id="gameCanvas" width="350" height="450"></canvas>
         <div class="controls">ARROWS TO MOVE</div>
     </div>
 
-    <a href="journal.html" class="back-btn">← BACK TO JOURNAL</a>
+    <a href="ikus-journal.html" class="back-btn">← BACK TO JOURNAL</a>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreDisplay = document.getElementById("score");
+        const highScoreDisplay = document.getElementById("highScore");
+
+        // High Score Logic
+        let highScore = localStorage.getItem("iku_highscore") || 0;
+        highScoreDisplay.innerText = highScore;
 
         const gravity = 0.25;
         const jumpStrength = -9;
@@ -100,6 +109,7 @@
                 ball.y += scroll;
                 score++;
                 scoreDisplay.innerText = Math.floor(score / 10);
+                
                 platforms.forEach(p => {
                     p.y += scroll;
                     if (p.y > canvas.height) {
@@ -121,8 +131,17 @@
 
             if (ball.y > canvas.height) {
                 gameOver = true;
+                
+                // Save High Score
+                const finalScore = Math.floor(score/10);
+                if (finalScore > highScore) {
+                    highScore = finalScore;
+                    localStorage.setItem("iku_highscore", highScore);
+                    highScoreDisplay.innerText = highScore;
+                }
+
                 setTimeout(() => {
-                    alert("Game Over! Score: " + Math.floor(score/10));
+                    alert("Game Over! Score: " + finalScore);
                     score = 0; scoreDisplay.innerText = "0";
                     gameOver = false; ball.y = 250; ball.vy = 0;
                     createPlatforms();
