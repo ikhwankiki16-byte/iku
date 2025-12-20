@@ -17,7 +17,7 @@ body {
   /* Permanent Void Background */
   background: radial-gradient(circle at center, #0b1c2d 0%, #05070a 60%, #000000 100%) !important;
   background-attachment: fixed;
-  overflow-x: hidden; /* Prevents side-scrolling on mobile */
+  overflow-x: hidden; 
 }
 
 /* 2. ATMOSPHERIC GRAIN LAYER */
@@ -31,7 +31,7 @@ body::before {
 }
 
 /* 3. UNIVERSAL BUTTON STYLING (The "Iku" Standard) */
-.icon-btn, .game-btn-small, .lock-btn {
+.icon-btn, .game-btn-small, .lock-btn, .delete-btn {
   background: white;
   color: black;
   border: none;
@@ -46,29 +46,25 @@ body::before {
   gap: 8px;
   font-size: 0.9rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  /* This creates the smooth "lifting" and "bouncing" animation */
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
 }
 
-/* Round style for the game and lock buttons */
-.game-btn-small, .lock-btn {
+/* Round style for the game, lock, and delete buttons */
+.game-btn-small, .lock-btn, .delete-btn {
   width: 48px;
   padding: 0;
-  border-radius: 50%; /* Perfect circle */
+  border-radius: 50%;
 }
 
 /* 4. INTERACTION STATES */
-
-/* Hover: The button lifts and glows */
-.icon-btn:hover, .game-btn-small:hover, .lock-btn:hover {
+.icon-btn:hover, .game-btn-small:hover, .lock-btn:hover, .delete-btn:hover {
   transform: translateY(-5px); 
   box-shadow: 0 8px 20px rgba(255, 255, 255, 0.15); 
   background-color: #fcfcfc;
 }
 
-/* Active: The button shrinks slightly when clicked/tapped */
-.icon-btn:active, .game-btn-small:active, .lock-btn:active {
+.icon-btn:active, .game-btn-small:active, .lock-btn:active, .delete-btn:active {
   transform: translateY(-1px) scale(0.95);
 }
 
@@ -85,4 +81,23 @@ body::before {
   z-index: 1000;
   padding: 0 16px;
   box-sizing: border-box;
+}
+
+/* 6. JOURNAL SPECIFIC FIXES (Prevents Text Overlap) */
+.journal-container {
+  /* This ensures the entry list has room to breathe at the bottom */
+  padding-bottom: 120px !important;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.entry-card {
+  position: relative; /* Context for the delete button if inside card */
+  margin-bottom: 20px;
+  padding: 20px;
+  /* Add extra padding-bottom if your delete button is inside the card */
+  padding-bottom: 60px; 
+  text-align: left;
+  word-wrap: break-word;
 }
