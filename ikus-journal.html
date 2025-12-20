@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
-    <title>iku's journal</title>
+    <title>iku's journal | admin</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* 1. PHYSICAL OVERRIDE FOR OUTER BACKGROUND */
+        /* 1. OUTER BACKGROUND FIX */
         html { 
             background-color: #000000 !important; 
             margin: 0;
@@ -23,27 +23,63 @@
             margin: 0;
             padding-top: 50px;
             color: white;
-            /* Transparent so the gradient from style.css shows through */
             background: transparent !important; 
         }
 
-        /* 2. JOURNAL COMPONENTS */
+        /* 2. JOURNAL ENTRIES */
+        #entries {
+            width: 90%;
+            max-width: 600px;
+            padding-bottom: 150px;
+        }
+
+        .journal-entry {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .entry-title { font-weight: 800; font-size: 1.1rem; display: block; }
+        .entry-content { display: none; margin-top: 15px; color: #ccc; white-space: pre-wrap; }
+        .expanded .entry-content { display: block; }
+
+        /* 3. DELETE BUTTON (Hidden by default) */
+        .delete-btn {
+            display: none;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #ff4d4d;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.6;
+        }
+        .delete-btn:hover { opacity: 1; }
+        .is-admin .delete-btn { display: block; }
+
+        /* 4. ADMIN WRITING AREA */
         #editorArea {
             display: none;
             width: 90%;
             max-width: 600px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.08);
             padding: 20px;
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             margin-bottom: 30px;
             text-align: center;
         }
 
         #note {
             width: 100%;
-            height: 120px;
-            background: rgba(0, 0, 0, 0.3);
+            height: 100px;
+            background: rgba(0, 0, 0, 0.4);
             color: white;
             border: 1px solid #444;
             border-radius: 10px;
@@ -53,51 +89,36 @@
             box-sizing: border-box;
         }
 
-        #entries {
-            width: 90%;
-            max-width: 600px;
-            padding-bottom: 150px; /* Space for bottom navigation */
-        }
-
-        .journal-entry {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            margin-bottom: 15px;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            cursor: pointer;
-        }
-
-        .entry-title { font-weight: 800; font-size: 1.1rem; }
-        .entry-content { display: none; margin-top: 15px; color: #ccc; white-space: pre-wrap; }
-        .expanded .entry-content { display: block; }
-
-        /* 3. ADMIN / LOGIN UI */
+        /* 5. POPUPS & BUTTONS */
         #loginPopup {
             display: none;
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #111;
+            background: #0a0a0a;
             padding: 30px;
             border-radius: 20px;
             border: 1px solid white;
             z-index: 9999;
             flex-direction: column;
             gap: 10px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
         }
         #loginPopup.open { display: flex; }
 
         .post-btn {
-            background: white; color: black; border: none; padding: 10px 20px;
+            background: white; color: black; border: none; padding: 10px 25px;
             border-radius: 20px; font-weight: bold; cursor: pointer; margin-top: 10px;
         }
+
+        #logoutBtn { display: none; margin-left: 10px; background: #ff4d4d; color: white; border-radius: 50px; padding: 0 15px; height: 48px; border: none; font-weight: 800; cursor: pointer; }
     </style>
 </head>
-<body>
+<body id="mainBody">
+
     <div id="editorArea">
-        <textarea id="note" placeholder="Write your entry..."></textarea><br>
+        <textarea id="note" placeholder="What's on your mind?"></textarea><br>
         <button id="saveBtn" class="post-btn">POST ENTRY</button>
     </div>
 
@@ -106,19 +127,20 @@
     <div id="bottomControls">
         <a class="icon-btn" href="index.html">🏠 HOME</a>
         <button id="showLoginBtn" class="icon-btn" style="width: 50px; padding: 0; border-radius: 50%;">🔒</button>
+        <button id="logoutBtn">LOGOUT</button>
     </div>
 
     <div id="loginPopup">
-        <input type="email" id="emailInput" placeholder="Email">
+        <input type="email" id="emailInput" placeholder="Admin Email">
         <input type="password" id="passInput" placeholder="Password">
-        <button id="performLoginBtn" class="post-btn">LOGIN</button>
-        <button onclick="document.getElementById('loginPopup').classList.remove('open')" style="background:none; border:none; color:gray; cursor:pointer;">Close</button>
+        <button id="performLoginBtn" class="post-btn">SIGN IN</button>
+        <button onclick="document.getElementById('loginPopup').classList.remove('open')" style="background:none; border:none; color:gray; cursor:pointer; margin-top:5px;">Cancel</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g", 
@@ -131,25 +153,39 @@
         const db = getDatabase(app);
         const auth = getAuth(app);
 
-        const popup = document.getElementById('loginPopup');
-        const showLoginBtn = document.getElementById('showLoginBtn');
-
-        showLoginBtn.onclick = () => popup.classList.toggle('open');
-
+        // UI Logic
         onAuthStateChanged(auth, (user) => {
-            document.getElementById('editorArea').style.display = user ? 'block' : 'none';
-            showLoginBtn.innerHTML = user ? '🔓' : '🔒';
+            const body = document.getElementById('mainBody');
+            const editor = document.getElementById('editorArea');
+            const logout = document.getElementById('logoutBtn');
+            const lock = document.getElementById('showLoginBtn');
+
+            if (user) {
+                body.classList.add('is-admin');
+                editor.style.display = 'block';
+                logout.style.display = 'block';
+                lock.style.display = 'none';
+            } else {
+                body.classList.remove('is-admin');
+                editor.style.display = 'none';
+                logout.style.display = 'none';
+                lock.style.display = 'block';
+            }
         });
 
+        // Logout
+        document.getElementById('logoutBtn').onclick = () => signOut(auth);
+
+        // Login
+        document.getElementById('showLoginBtn').onclick = () => document.getElementById('loginPopup').classList.add('open');
         document.getElementById('performLoginBtn').onclick = async () => {
-            const email = document.getElementById('emailInput').value;
-            const pass = document.getElementById('passInput').value;
             try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                popup.classList.remove('open');
-            } catch (e) { alert("Access Denied."); }
+                await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value);
+                document.getElementById('loginPopup').classList.remove('open');
+            } catch (e) { alert("Wrong password."); }
         };
 
+        // Render Entries with Delete Feature
         onValue(ref(db, 'entries'), (snapshot) => {
             const list = document.getElementById('entries');
             list.innerHTML = '';
@@ -160,15 +196,29 @@
                     const div = document.createElement('div');
                     div.className = 'journal-entry';
                     div.innerHTML = `
+                        <button class="delete-btn" data-id="${key}">🗑️</button>
                         <span class="entry-title">${entry.text.split('\n')[0]}</span>
                         <div class="entry-content">${entry.text}</div>
                     `;
-                    div.onclick = () => div.classList.toggle('expanded');
+                    
+                    // Click to expand (ignore if clicking delete)
+                    div.onclick = (e) => {
+                        if (!e.target.classList.contains('delete-btn')) div.classList.toggle('expanded');
+                    };
+
+                    // Delete Logic
+                    div.querySelector('.delete-btn').onclick = () => {
+                        if(confirm("Delete this memory forever?")) {
+                            remove(ref(db, `entries/${key}`));
+                        }
+                    };
+
                     list.appendChild(div);
                 });
             }
         });
 
+        // Save Entry
         document.getElementById('saveBtn').onclick = () => {
             const val = document.getElementById('note').value;
             if(val.trim()) {
