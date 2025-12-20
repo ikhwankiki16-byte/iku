@@ -55,76 +55,85 @@
     let isAdmin = false;
     let initialLoad = true;
 
-    // Security Helper: Escape HTML
     const escapeHTML = (str) => {
       const p = document.createElement('p');
       p.textContent = str;
       return p.innerHTML;
     };
 
-    onAuthStateChanged(auth, user => {
-      const userIsAdmin = !!user;
-      if (!initialLoad && isAdmin !== userIsAdmin) {
-        window.location.reload();
-      }
-      isAdmin = userIsAdmin;
-      initialLoad = false; 
-      document.getElementById('editorArea').style.display = user ? 'block' : 'none';
-      document.getElementById('showLoginBtn').innerHTML = user ? '🔓' : '🔒';
+    // Wait for DOM to be fully ready before setting up listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      
+      onAuthStateChanged(auth, user => {
+        const userIsAdmin = !!user;
+        if (!initialLoad && isAdmin !== userIsAdmin) {
+          window.location.reload();
+        }
+        isAdmin = userIsAdmin;
+        initialLoad = false; 
+        
+        const editor = document.getElementById('editorArea');
+        const lockBtn = document.getElementById('showLoginBtn');
+        if(editor) editor.style.display = user ? 'block' : 'none';
+        if(lockBtn) lockBtn.innerHTML = user ? '🔓' : '🔒';
+      });
+
+      onValue(ref(db, 'entries'), (snapshot) => {
+        const list = document.getElementById('entries');
+        if(!list) return;
+        list.innerHTML = '';
+        const data = snapshot.val();
+        if (data) {
+          Object.keys(data).reverse().forEach(key => {
+            const entry = data[key];
+            const div = document.createElement('div');
+            div.className = 'journal-entry';
+            
+            let delBtnHtml = isAdmin ? `<button class="delete-btn" id="del-${key}">DELETE</button>` : '';
+            
+            div.innerHTML = `
+              ${delBtnHtml}
+              <div class="entry-date">${new Date(entry.date).toLocaleString()}</div>
+              <div class="entry-content">${escapeHTML(entry.text)}</div>
+            `;
+            list.appendChild(div);
+
+            if(isAdmin) {
+              const btn = document.getElementById(`del-${key}`);
+              if(btn) btn.onclick = () => {
+                if(confirm("Delete this entry?")) remove(ref(db, `entries/${key}`));
+              };
+            }
+          });
+        }
+      });
+
+      document.getElementById('showLoginBtn').onclick = () => {
+        if (isAdmin) {
+          if(confirm("Logout?")) signOut(auth);
+        } else {
+          const p = document.getElementById('loginPopup');
+          p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
+        }
+      };
+
+      document.getElementById('performLoginBtn').onclick = async () => {
+        const email = document.getElementById('emailInput').value;
+        const pass = document.getElementById('passInput').value;
+        try {
+          await signInWithEmailAndPassword(auth, email, pass);
+          document.getElementById('loginPopup').style.display = 'none';
+        } catch (e) { alert("Login Error"); }
+      };
+
+      document.getElementById('saveBtn').onclick = () => {
+        const ta = document.getElementById('note');
+        if(ta && ta.value.trim() !== "") {
+          push(ref(db, 'entries'), { date: new Date().toISOString(), text: ta.value });
+          ta.value = '';
+        }
+      };
     });
-
-    onValue(ref(db, 'entries'), (snapshot) => {
-      const list = document.getElementById('entries');
-      list.innerHTML = '';
-      const data = snapshot.val();
-      if (data) {
-        Object.keys(data).reverse().forEach(key => {
-          const entry = data[key];
-          const div = document.createElement('div');
-          div.className = 'journal-entry';
-          
-          let delBtnHtml = isAdmin ? `<button class="delete-btn" id="del-${key}">DELETE</button>` : '';
-          
-          div.innerHTML = `
-            ${delBtnHtml}
-            <div class="entry-date">${new Date(entry.date).toLocaleString()}</div>
-            <div class="entry-content">${escapeHTML(entry.text)}</div>
-          `;
-          list.appendChild(div);
-
-          // Corrected the ID reference here
-          if(isAdmin) {
-            document.getElementById(`del-${key}`).onclick = () => {
-              if(confirm("Delete this entry?")) remove(ref(db, `entries/${key}`));
-            };
-          }
-        });
-      }
-    });
-
-    document.getElementById('showLoginBtn').onclick = () => {
-      if (isAdmin) {
-        if(confirm("Logout?")) signOut(auth);
-      } else {
-        const p = document.getElementById('loginPopup');
-        p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
-      }
-    };
-
-    document.getElementById('performLoginBtn').onclick = async () => {
-      try {
-        await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passInput').value);
-        document.getElementById('loginPopup').style.display = 'none';
-      } catch (e) { alert("Login Error"); }
-    };
-
-    document.getElementById('saveBtn').onclick = () => {
-      const ta = document.getElementById('note');
-      if(ta.value.trim() !== "") {
-        push(ref(db, 'entries'), { date: new Date().toISOString(), text: ta.value });
-        ta.value = '';
-      }
-    };
   </script>
 </head>
 <body>
