@@ -5,7 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>iku's journal</title>
-  
   <style>
     * { box-sizing: border-box; }
     html { background-color: #000; }
@@ -45,7 +44,6 @@
 
     const firebaseConfig = { 
       apiKey: "AIzaSyBdkI7GUPRJsxLtBlp9gaQNlR7nz-JDi2g", 
-      // FIX 3: Added authDomain as recommended
       authDomain: "iku-website-iku.firebaseapp.com",
       databaseURL: "https://iku-website-iku-default-rtdb.asia-southeast1.firebasedatabase.app", 
       projectId: "iku-website-iku" 
@@ -57,7 +55,7 @@
     let isAdmin = false;
     let initialLoad = true;
 
-    // Helper to prevent XSS (Security Fix 4)
+    // Security Helper: Escape HTML
     const escapeHTML = (str) => {
       const p = document.createElement('p');
       p.textContent = str;
@@ -87,7 +85,6 @@
           
           let delBtnHtml = isAdmin ? `<button class="delete-btn" id="del-${key}">DELETE</button>` : '';
           
-          // Use safe textContent or escaped string to prevent XSS
           div.innerHTML = `
             ${delBtnHtml}
             <div class="entry-date">${new Date(entry.date).toLocaleString()}</div>
@@ -95,19 +92,15 @@
           `;
           list.appendChild(div);
 
+          // Corrected the ID reference here
           if(isAdmin) {
             document.getElementById(`del-${key}`).onclick = () => {
-              if(confirm("Delete this entry?")) remove(ref(db, `entries/${id}`));
+              if(confirm("Delete this entry?")) remove(ref(db, `entries/${key}`));
             };
           }
         });
       }
     });
-
-    // We keep these global window assignments so buttons can find them
-    window.delEntry = (id) => { 
-      if(confirm("Delete this entry?")) { remove(ref(db, `entries/${id}`)); }
-    };
 
     document.getElementById('showLoginBtn').onclick = () => {
       if (isAdmin) {
