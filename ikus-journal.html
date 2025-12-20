@@ -7,11 +7,12 @@
     <title>iku's journal</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* FORCED BLACK OUTER BACKGROUND */
+        /* 1. PHYSICAL OVERRIDE FOR OUTER BACKGROUND */
         html { 
             background-color: #000000 !important; 
             margin: 0;
             padding: 0;
+            height: 100%;
         }
 
         body {
@@ -22,9 +23,11 @@
             margin: 0;
             padding-top: 50px;
             color: white;
-            background: transparent; /* Allows style.css gradient to show */
+            /* Transparent so the gradient from style.css shows through */
+            background: transparent !important; 
         }
 
+        /* 2. JOURNAL COMPONENTS */
         #editorArea {
             display: none;
             width: 90%;
@@ -53,7 +56,7 @@
         #entries {
             width: 90%;
             max-width: 600px;
-            padding-bottom: 120px;
+            padding-bottom: 150px; /* Space for bottom navigation */
         }
 
         .journal-entry {
@@ -69,6 +72,7 @@
         .entry-content { display: none; margin-top: 15px; color: #ccc; white-space: pre-wrap; }
         .expanded .entry-content { display: block; }
 
+        /* 3. ADMIN / LOGIN UI */
         #loginPopup {
             display: none;
             position: fixed;
