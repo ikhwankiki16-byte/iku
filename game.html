@@ -7,11 +7,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>iku's mini break</title>
     <style>
-        /* Override body to allow the game to fit without being squished */
+        /* Override the flex layout from style.css just for the game page */
         body {
-            justify-content: flex-start !important; /* Start from top */
-            padding-top: 40px;
-            overflow-y: auto; /* Allow scrolling if screen is too small */
+            display: block !important; /* Disables flex centering which was squishing the game */
+            overflow-y: auto !important;
+            padding: 20px;
+        }
+
+        .game-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 100px); /* Fits game in center minus button space */
         }
 
         .game-container {
@@ -19,12 +27,12 @@
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 25px; 
+            padding: 20px; 
             border-radius: 40px; 
             text-align: center;
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            flex-shrink: 0; /* Prevents the container from collapsing */
-            margin-bottom: 120px; /* Space for the bottom buttons */
+            position: relative;
+            z-index: 10; /* Sits above the grain layer */
         }
 
         h1 { font-weight: 200; letter-spacing: 6px; margin-bottom: 10px; font-size: 1.2rem; opacity: 0.6; }
@@ -37,19 +45,20 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             touch-action: none;
             display: block;
-            margin: 0 auto;
         }
         .controls-hint { margin-top: 20px; font-size: 0.8rem; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
-    <div class="game-container">
-        <h1>Mini Break</h1>
-        <span id="score">0</span>
-        <div class="high-score-label">Best: <span id="highScore">0</span></div>
-        <canvas id="gameCanvas" width="320" height="400"></canvas>
-        <div class="controls-hint">ARROWS TO MOVE</div>
+    <div class="game-wrapper">
+        <div class="game-container">
+            <h1>Mini Break</h1>
+            <span id="score">0</span>
+            <div class="high-score-label">Best: <span id="highScore">0</span></div>
+            <canvas id="gameCanvas" width="320" height="400"></canvas>
+            <div class="controls-hint">ARROWS TO MOVE</div>
+        </div>
     </div>
 
     <div id="bottomControls">
