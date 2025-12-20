@@ -5,92 +5,19 @@
   <link rel="stylesheet" href="style.css">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#050505">
   <title>iku's world</title>
   <style>
-    /* CRITICAL: Fixes browser UI colors and prevents scrolling */
-    html { background-color: #000000; }
-    
     body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden; 
-      position: fixed;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
-      color: white;
     }
-
-    h1 { font-weight: 300; letter-spacing: 4px; margin: 0; }
-    .typewriter-container { min-height: 1.5em; margin: 10px 0 20px 0; }
-    
-    img { 
-      max-width: 300px; 
-      width: 70%; 
-      height: auto; 
-      border-radius: 10px; 
-      margin-bottom: 80px;
-    }
-
-    #bottomControls {
-      position: fixed; 
-      bottom: 30px; 
-      left: 0; 
-      right: 0;
-      display: flex; 
-      justify-content: center; 
-      align-items: center; /* Ensures the circle and rectangles align perfectly */
-      gap: 12px; 
-      z-index: 1000;
-      padding: 0 16px;
-      box-sizing: border-box;
-    }
-
-    .icon-btn {
-      background: white;
-      color: black;
-      border: none;
-      border-radius: 20px;
-      font-weight: 800;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      height: 48px;
-      width: 135px; /* Slightly reduced to fit 3 buttons on small screens */
-      padding: 0; 
-      gap: 8px;
-      font-size: 0.85rem;
-      font-family: Arial, sans-serif;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      transition: transform 0.2s ease;
-      box-sizing: border-box;
-    }
-
-    /* Small circular button for the game */
-    .game-btn-small {
-      background: white;
-      color: black;
-      text-decoration: none;
-      height: 48px;
-      width: 48px;
-      border-radius: 24px; /* Makes it a circle */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      transition: transform 0.2s ease;
-    }
-
-    .icon-btn:active, .game-btn-small:active { transform: scale(0.95); }
-
-    .cursor { font-weight: bold; animation: blink 1s step-end infinite; margin-left: 2px; }
+    h1 { font-weight: 300; letter-spacing: 4px; margin: 0; opacity: 0.9; }
+    .typewriter-container { min-height: 1.5em; margin: 10px 0 20px 0; color: rgba(255,255,255,0.6); }
+    img { max-width: 300px; width: 60%; height: auto; margin-bottom: 80px; filter: drop-shadow(0 0 20px rgba(0,0,0,0.5)); }
+    .cursor { font-weight: bold; animation: blink 1s step-end infinite; }
     @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
   </style>
 </head>
@@ -103,17 +30,9 @@
   <img src="iku.svg" alt="iku">
 
   <div id="bottomControls">
-    <a class="icon-btn" href="fragments.html">
-      <span>🐜</span><span>FRAGMENTS</span>
-    </a>
-
-    <a class="game-btn-small" href="game.html" title="Mini Break">
-      🎮
-    </a>
-
-    <a class="icon-btn" href="ikus-journal.html">
-      <span>📖</span><span>JOURNAL</span>
-    </a>
+    <a class="icon-btn" href="fragments.html"><span>🐜</span> FRAGMENTS</a>
+    <a class="icon-btn" href="game.html" style="width:50px; padding:0; border-radius:50%;">🎮</a>
+    <a class="icon-btn" href="ikus-journal.html"><span>📖</span> JOURNAL</a>
   </div>
 
   <script>
@@ -123,7 +42,6 @@
       if (hour >= 17 && hour < 20) return "the sun is setting. i'm leaving soon.";
       return "it's late. i'm leaving soon.";
     }
-
     const textToType = updateAtmosphere();
     let i = 0;
     function typeWriter() {
@@ -133,12 +51,7 @@
         setTimeout(typeWriter, 100);
       }
     }
-
     window.onload = typeWriter;
-
-    document.addEventListener('touchmove', (e) => {
-      if(e.touches.length <= 1) e.preventDefault();
-    }, { passive: false });
   </script>
 </body>
 </html>
