@@ -2,10 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
     <title>iku's journal</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* FORCED BLACK OUTER BACKGROUND */
+        html { 
+            background-color: #000000 !important; 
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             display: flex;
             flex-direction: column;
@@ -14,11 +22,11 @@
             margin: 0;
             padding-top: 50px;
             color: white;
+            background: transparent; /* Allows style.css gradient to show */
         }
 
-        /* The writing area for the admin */
         #editorArea {
-            display: none; /* Hidden until logged in */
+            display: none;
             width: 90%;
             max-width: 600px;
             background: rgba(255, 255, 255, 0.05);
@@ -42,7 +50,6 @@
             box-sizing: border-box;
         }
 
-        /* The list of journal entries */
         #entries {
             width: 90%;
             max-width: 600px;
@@ -58,24 +65,10 @@
             cursor: pointer;
         }
 
-        .entry-title {
-            font-weight: 800;
-            font-size: 1.1rem;
-            display: block;
-        }
+        .entry-title { font-weight: 800; font-size: 1.1rem; }
+        .entry-content { display: none; margin-top: 15px; color: #ccc; white-space: pre-wrap; }
+        .expanded .entry-content { display: block; }
 
-        .entry-content {
-            display: none;
-            margin-top: 15px;
-            color: #ccc;
-            white-space: pre-wrap;
-        }
-
-        .expanded .entry-content {
-            display: block;
-        }
-
-        /* Login UI */
         #loginPopup {
             display: none;
             position: fixed;
@@ -90,31 +83,15 @@
             flex-direction: column;
             gap: 10px;
         }
-
         #loginPopup.open { display: flex; }
 
-        input {
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #444;
-            background: #000;
-            color: white;
-        }
-
         .post-btn {
-            background: white;
-            color: black;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
+            background: white; color: black; border: none; padding: 10px 20px;
+            border-radius: 20px; font-weight: bold; cursor: pointer; margin-top: 10px;
         }
     </style>
 </head>
 <body>
-
     <div id="editorArea">
         <textarea id="note" placeholder="Write your entry..."></textarea><br>
         <button id="saveBtn" class="post-btn">POST ENTRY</button>
@@ -153,16 +130,13 @@
         const popup = document.getElementById('loginPopup');
         const showLoginBtn = document.getElementById('showLoginBtn');
 
-        // Toggle Login
         showLoginBtn.onclick = () => popup.classList.toggle('open');
 
-        // Auth Logic: Show editor if logged in
         onAuthStateChanged(auth, (user) => {
             document.getElementById('editorArea').style.display = user ? 'block' : 'none';
             showLoginBtn.innerHTML = user ? '🔓' : '🔒';
         });
 
-        // Sign In
         document.getElementById('performLoginBtn').onclick = async () => {
             const email = document.getElementById('emailInput').value;
             const pass = document.getElementById('passInput').value;
@@ -172,7 +146,6 @@
             } catch (e) { alert("Access Denied."); }
         };
 
-        // Load Entries from Firebase
         onValue(ref(db, 'entries'), (snapshot) => {
             const list = document.getElementById('entries');
             list.innerHTML = '';
@@ -192,7 +165,6 @@
             }
         });
 
-        // Save Entry
         document.getElementById('saveBtn').onclick = () => {
             const val = document.getElementById('note').value;
             if(val.trim()) {
