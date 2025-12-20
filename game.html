@@ -9,16 +9,18 @@
         body { 
             background: radial-gradient(circle at center, #0b1c2d 0%, #05070a 60%, #000000 100%) no-repeat fixed;
             color: white; margin: 0; padding: 0; 
-            font-family: 'Inter', sans-serif; 
+            font-family: Arial, sans-serif; /* Matched to your journal font */
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             height: 100vh; overflow: hidden;
         }
         .game-container {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 30px; border-radius: 40px; text-align: center;
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            margin-bottom: 80px; /* Space for the bottom control */
         }
         h1 { font-weight: 200; letter-spacing: 6px; margin-bottom: 10px; font-size: 1.2rem; opacity: 0.6; }
         #score { font-family: 'Courier New', monospace; font-size: 3rem; margin-bottom: 5px; display: block; font-weight: bold; }
@@ -30,14 +32,37 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             touch-action: none;
         }
-        .controls { margin-top: 20px; font-size: 0.8rem; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
+        .controls-hint { margin-top: 20px; font-size: 0.8rem; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
         
-        .back-btn {
-            margin-top: 30px; text-decoration: none; color: black; background: white;
-            padding: 12px 30px; border-radius: 50px; font-weight: 800; font-size: 0.8rem;
-            transition: 0.3s;
+        /* THE STANDARDIZED HOME BUTTON */
+        #bottomControls {
+            position: fixed; 
+            bottom: 30px; 
+            left: 0; 
+            width: 100%; 
+            display: flex; 
+            justify-content: center; 
+            z-index: 1000;
         }
-        .back-btn:hover { transform: scale(1.05); opacity: 0.9; }
+        .icon-btn {
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 20px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 48px;
+            width: 140px;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: transform 0.2s ease;
+        }
+        .icon-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -46,11 +71,13 @@
         <h1>Mini Break</h1>
         <span id="score">0</span>
         <div class="high-score-label">Best: <span id="highScore">0</span></div>
-        <canvas id="gameCanvas" width="350" height="450"></canvas>
-        <div class="controls">ARROWS TO MOVE</div>
+        <canvas id="gameCanvas" width="320" height="400"></canvas>
+        <div class="controls-hint">ARROWS TO MOVE</div>
     </div>
 
-    <a href="ikus-journal.html" class="back-btn">← BACK TO JOURNAL</a>
+    <div id="bottomControls">
+        <a class="icon-btn" href="index.html">🏠 HOME</a>
+    </div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
@@ -58,7 +85,6 @@
         const scoreDisplay = document.getElementById("score");
         const highScoreDisplay = document.getElementById("highScore");
 
-        // High Score Logic
         let highScore = localStorage.getItem("iku_highscore") || 0;
         highScoreDisplay.innerText = highScore;
 
@@ -67,12 +93,7 @@
         let score = 0;
         let gameOver = false;
 
-        const ball = {
-            x: 175, y: 250,
-            radius: 10, vx: 0, vy: 0,
-            color: "#ffffff"
-        };
-
+        const ball = { x: 160, y: 200, radius: 10, vx: 0, vy: 0, color: "#ffffff" };
         let platforms = [];
         const platformWidth = 60;
         const platformHeight = 8;
@@ -109,7 +130,6 @@
                 ball.y += scroll;
                 score++;
                 scoreDisplay.innerText = Math.floor(score / 10);
-                
                 platforms.forEach(p => {
                     p.y += scroll;
                     if (p.y > canvas.height) {
@@ -131,19 +151,16 @@
 
             if (ball.y > canvas.height) {
                 gameOver = true;
-                
-                // Save High Score
                 const finalScore = Math.floor(score/10);
                 if (finalScore > highScore) {
                     highScore = finalScore;
                     localStorage.setItem("iku_highscore", highScore);
                     highScoreDisplay.innerText = highScore;
                 }
-
                 setTimeout(() => {
                     alert("Game Over! Score: " + finalScore);
                     score = 0; scoreDisplay.innerText = "0";
-                    gameOver = false; ball.y = 250; ball.vy = 0;
+                    gameOver = false; ball.y = 200; ball.vy = 0;
                     createPlatforms();
                 }, 10);
             }
