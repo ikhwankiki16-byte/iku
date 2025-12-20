@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>iku's journal</title>
   <style>
+    /* CSS remains exactly the same to preserve your aesthetic */
     * { box-sizing: border-box; }
     html { background-color: #000; }
     body { 
@@ -61,56 +62,57 @@
       return p.innerHTML;
     };
 
-    // Wait for DOM to be fully ready before setting up listeners
-    document.addEventListener('DOMContentLoaded', () => {
+    // 1. Handle Login State & UI Refresh
+    onAuthStateChanged(auth, user => {
+      const userIsAdmin = !!user;
+      if (!initialLoad && isAdmin !== userIsAdmin) {
+        window.location.reload();
+        return;
+      }
+      isAdmin = userIsAdmin;
+      initialLoad = false; 
       
-      onAuthStateChanged(auth, user => {
-        const userIsAdmin = !!user;
-        if (!initialLoad && isAdmin !== userIsAdmin) {
-          window.location.reload();
-        }
-        isAdmin = userIsAdmin;
-        initialLoad = false; 
-        
-        const editor = document.getElementById('editorArea');
-        const lockBtn = document.getElementById('showLoginBtn');
-        if(editor) editor.style.display = user ? 'block' : 'none';
-        if(lockBtn) lockBtn.innerHTML = user ? '🔓' : '🔒';
-      });
+      const editor = document.getElementById('editorArea');
+      const lockBtn = document.getElementById('showLoginBtn');
+      if(editor) editor.style.display = user ? 'block' : 'none';
+      if(lockBtn) lockBtn.innerHTML = user ? '🔓' : '🔒';
+    });
 
-      onValue(ref(db, 'entries'), (snapshot) => {
-        const list = document.getElementById('entries');
-        if(!list) return;
-        list.innerHTML = '';
-        const data = snapshot.val();
-        if (data) {
-          Object.keys(data).reverse().forEach(key => {
-            const entry = data[key];
-            const div = document.createElement('div');
-            div.className = 'journal-entry';
-            
-            let delBtnHtml = isAdmin ? `<button class="delete-btn" id="del-${key}">DELETE</button>` : '';
-            
-            div.innerHTML = `
-              ${delBtnHtml}
-              <div class="entry-date">${new Date(entry.date).toLocaleString()}</div>
-              <div class="entry-content">${escapeHTML(entry.text)}</div>
-            `;
-            list.appendChild(div);
+    // 2. Load Entries
+    onValue(ref(db, 'entries'), (snapshot) => {
+      const list = document.getElementById('entries');
+      if(!list) return;
+      list.innerHTML = '';
+      const data = snapshot.val();
+      if (data) {
+        Object.keys(data).reverse().forEach(key => {
+          const entry = data[key];
+          const div = document.createElement('div');
+          div.className = 'journal-entry';
+          let delBtnHtml = isAdmin ? `<button class="delete-btn" id="del-${key}">DELETE</button>` : '';
+          div.innerHTML = `${delBtnHtml}<div class="entry-date">${new Date(entry.date).toLocaleString()}</div><div class="entry-content">${escapeHTML(entry.text)}</div>`;
+          list.appendChild(div);
 
-            if(isAdmin) {
-              const btn = document.getElementById(`del-${key}`);
-              if(btn) btn.onclick = () => {
-                if(confirm("Delete this entry?")) remove(ref(db, `entries/${key}`));
-              };
-            }
-          });
-        }
-      });
+          if(isAdmin) {
+            const btn = document.getElementById(`del-${key}`);
+            if(btn) btn.onclick = () => {
+              if(confirm("Delete this entry?")) remove(ref(db, `entries/${key}`));
+            };
+          }
+        });
+      }
+    });
 
+    // 3. Setup Button Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('showLoginBtn').onclick = () => {
         if (isAdmin) {
-          if(confirm("Logout?")) signOut(auth);
+          if(confirm("Logout?")) {
+            signOut(auth).then(() => {
+              // Forced reload to ensure UI resets
+              window.location.reload();
+            });
+          }
         } else {
           const p = document.getElementById('loginPopup');
           p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
