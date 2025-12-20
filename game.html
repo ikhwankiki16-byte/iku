@@ -7,19 +7,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>iku's mini break</title>
     <style>
-        /* Override the flex layout from style.css just for the game page */
-        body {
-            display: block !important; /* Disables flex centering which was squishing the game */
-            overflow-y: auto !important;
-            padding: 20px;
+        /* 1. OVERRIDE GLOBAL CSS */
+        html, body {
+            height: 100% !important;
+            margin: 0;
+            padding: 0;
+            overflow: hidden !important; /* Prevent double scrollbars */
+            display: block !important; /* Kill the flexbox that squishes the game */
         }
 
+        /* 2. CENTER THE GAME MANUALLY */
         .game-wrapper {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            width: 100%;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: calc(100vh - 100px); /* Fits game in center minus button space */
         }
 
         .game-container {
@@ -31,22 +37,30 @@
             border-radius: 40px; 
             text-align: center;
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            position: relative;
-            z-index: 10; /* Sits above the grain layer */
+            width: fit-content;
         }
 
-        h1 { font-weight: 200; letter-spacing: 6px; margin-bottom: 10px; font-size: 1.2rem; opacity: 0.6; }
-        #score { font-family: 'Courier New', monospace; font-size: 3rem; margin-bottom: 5px; display: block; font-weight: bold; }
-        .high-score-label { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        h1 { font-weight: 200; letter-spacing: 6px; margin: 0 0 10px 0; font-size: 1.1rem; opacity: 0.6; }
+        #score { font-family: 'Courier New', monospace; font-size: 2.5rem; margin: 0; display: block; font-weight: bold; }
+        .high-score-label { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px; }
         
         canvas {
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.6);
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             touch-action: none;
             display: block;
+            width: 280px; /* Slightly smaller for mobile safety */
+            height: 350px;
         }
-        .controls-hint { margin-top: 20px; font-size: 0.8rem; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
+        .controls-hint { margin-top: 15px; font-size: 0.7rem; color: rgba(255,255,255,0.3); letter-spacing: 1px; }
+
+        /* 3. ENSURE HOME BUTTON IS AT BOTTOM */
+        #bottomControls {
+            position: fixed;
+            bottom: 40px;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
@@ -66,6 +80,7 @@
     </div>
 
     <script>
+        // --- GAME LOGIC (Do not change) ---
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreDisplay = document.getElementById("score");
