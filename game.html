@@ -14,18 +14,18 @@
             height: 100vh;
             overflow: hidden;
         }
-        .game-header { margin-bottom: 20px; }
+        .game-header { margin-bottom: 20px; position: relative; z-index: 10; }
         h1 { font-weight: 200; letter-spacing: 5px; opacity: 0.8; }
         
         #gameCanvas {
             background: #000;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
             border-radius: 20px;
             max-width: 90vw;
-            max-height: 70vh;
-            position: relative; /* Ensures it's in the right stacking context */
-            z-index: 5;
-            cursor: crosshair;
+            max-height: 60vh;
+            position: relative;
+            z-index: 10; /* Above the grain layer */
+            cursor: pointer;
         }
     </style>
 </head>
@@ -48,28 +48,41 @@
         canvas.width = 800;
         canvas.height = 400;
 
-        // Visual test to confirm game is working
-        let x = 0;
-        function draw() {
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.arc(x % canvas.width, 200, 20, 0, Math.PI*2);
-            ctx.fill();
-            
-            ctx.fillText("GAME ACTIVE - CLICK TO TEST", 20, 30);
-            x += 2;
-            requestAnimationFrame(draw);
-        }
-        
+        let playerY = 200;
+        let score = 0;
+
+        // Simple Game Logic: Click to move player
         canvas.addEventListener('mousedown', () => {
-            canvas.style.borderColor = "white";
-            setTimeout(() => canvas.style.borderColor = "rgba(255,255,255,0.1)", 100);
+            playerY -= 40;
+            score++;
         });
 
-        draw();
+        function gameLoop() {
+            // Clear Canvas
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Gravity
+            if(playerY < 380) playerY += 2;
+
+            // Draw Player
+            ctx.fillStyle = "#00f2ff";
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = "#00f2ff";
+            ctx.fillRect(100, playerY, 30, 30);
+
+            // Text
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = "white";
+            ctx.font = "20px Arial";
+            ctx.fillText("Score: " + score, 30, 40);
+            ctx.fillText("Click to Jump", 350, 40);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game loop immediately
+        gameLoop();
     </script>
 </body>
 </html>
