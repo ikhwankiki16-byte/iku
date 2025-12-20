@@ -13,28 +13,25 @@
             justify-content: center;
             height: 100vh;
             overflow: hidden;
+            margin: 0;
         }
-        .game-header { margin-bottom: 20px; position: relative; z-index: 10; }
-        h1 { font-weight: 200; letter-spacing: 5px; opacity: 0.8; }
-        
-        #gameCanvas {
+        canvas {
             background: #000;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 20px;
             max-width: 90vw;
-            max-height: 60vh;
-            position: relative;
-            z-index: 10; /* Above the grain layer */
+            max-height: 65vh;
             cursor: pointer;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            position: relative;
+            z-index: 50; /* Above the grain! */
         }
+        h1 { font-weight: 200; letter-spacing: 5px; margin-bottom: 20px; opacity: 0.8; }
     </style>
 </head>
 <body>
 
-    <div class="game-header">
-        <h1>VOID RUNNER</h1>
-    </div>
-
+    <h1>VOID RUNNER</h1>
     <canvas id="gameCanvas"></canvas>
 
     <div id="bottomControls">
@@ -44,45 +41,41 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-
         canvas.width = 800;
         canvas.height = 400;
 
         let playerY = 200;
-        let score = 0;
+        let isStarted = false;
 
-        // Simple Game Logic: Click to move player
+        // Click to jump
         canvas.addEventListener('mousedown', () => {
-            playerY -= 40;
-            score++;
+            isStarted = true;
+            playerY -= 60;
         });
 
-        function gameLoop() {
-            // Clear Canvas
+        function loop() {
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Gravity
-            if(playerY < 380) playerY += 2;
+            if (playerY < canvas.height - 40) playerY += 3;
+            if (playerY < 10) playerY = 10;
 
-            // Draw Player
-            ctx.fillStyle = "#00f2ff";
+            // Player
             ctx.shadowBlur = 15;
             ctx.shadowColor = "#00f2ff";
+            ctx.fillStyle = "#00f2ff";
             ctx.fillRect(100, playerY, 30, 30);
-
-            // Text
             ctx.shadowBlur = 0;
+
             ctx.fillStyle = "white";
-            ctx.font = "20px Arial";
-            ctx.fillText("Score: " + score, 30, 40);
-            ctx.fillText("Click to Jump", 350, 40);
+            ctx.font = "16px Arial";
+            ctx.textAlign = "center";
+            if(!isStarted) ctx.fillText("CLICK TO JUMP", canvas.width/2, canvas.height/2);
 
-            requestAnimationFrame(gameLoop);
+            requestAnimationFrame(loop);
         }
-
-        // Start the game loop immediately
-        gameLoop();
+        loop();
     </script>
 </body>
 </html>
