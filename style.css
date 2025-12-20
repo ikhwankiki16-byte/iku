@@ -81,11 +81,12 @@ body::before {
   box-sizing: border-box;
 }
 
-/* 6. DREAMY JOURNAL EXPANSION */
+/* 6. DREAMY JOURNAL EXPANSION - FIXED */
 #entries {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: flex-start; /* Important for clean sideways growth */
   gap: 25px;
   padding: 20px;
   padding-bottom: 150px !important;
@@ -95,8 +96,10 @@ body::before {
 
 .entry-card {
   position: relative;
-  flex: 1 1 320px; 
-  max-width: 450px;
+  /* Using specific width for more reliable animation */
+  width: 320px; 
+  flex-grow: 0;
+  flex-shrink: 1;
   min-height: 180px;
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(10px);
@@ -107,17 +110,22 @@ body::before {
   text-align: left;
   word-wrap: break-word;
   color: rgba(255, 255, 255, 0.8);
-  transition: flex 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), 
-              transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
-              background 1s ease,
-              opacity 0.8s ease,
-              filter 0.8s ease;
+  
+  /* Dreamy Transition: Targets width and scale specifically */
+  transition: 
+    width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), 
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    background 1s ease,
+    opacity 0.8s ease,
+    filter 0.8s ease;
+  
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  overflow: hidden;
 }
 
 .entry-card:hover {
-  flex: 1 1 550px; 
-  max-width: 600px;
+  width: 550px; /* Explicit sideways expansion */
   background: rgba(255, 255, 255, 0.07);
   color: rgba(255, 255, 255, 1);
   transform: translateY(-8px) scale(1.01);
@@ -127,8 +135,9 @@ body::before {
 
 /* Soft blur for other entries when one is hovered */
 #entries:has(.entry-card:hover) .entry-card:not(:hover) {
-  opacity: 0.6;
-  filter: blur(2px);
+  opacity: 0.5;
+  filter: blur(3px);
+  transform: scale(0.97); /* Neighboring cards shrink slightly */
 }
 
 .entry-card .delete-btn {
