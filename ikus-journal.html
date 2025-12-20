@@ -1,90 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <link rel="icon" type="image/svg+xml" href="iku.svg">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>iku's journal</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        body { display: block; }
-        .title-header { text-align: center; padding: 80px 20px 40px; position: relative; z-index: 10; }
-        h1 { font-weight: 200; letter-spacing: 8px; opacity: 0.8; margin: 0; }
-
-        /* Journal Entries */
-        .entry-content {
-            max-height: 0; opacity: 0; overflow: hidden;
-            white-space: pre-wrap; font-family: 'Georgia', serif;
-            line-height: 1.8; color: rgba(255,255,255,0.7);
-            transition: max-height 0.8s ease, opacity 0.5s ease;
-        }
-        .journal-entry.expanded { flex-basis: 100% !important; max-width: 1000px; }
-        .journal-entry.expanded .entry-content { max-height: 2000px; opacity: 1; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
-
-        /* NEW LOGIN POPUP LOGIC */
-        #loginPopup { 
-            display: none; /* Default hidden */
-            position: fixed; 
-            bottom: 110px; 
+        /* This ensures the popup is at the very, very front */
+        #loginPopup {
+            display: none;
+            position: fixed;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            background: rgba(10, 10, 10, 0.98); 
-            backdrop-filter: blur(30px); 
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255,255,255,0.15); 
-            padding: 30px; 
-            border-radius: 35px; 
-            flex-direction: column; 
-            gap: 15px; 
-            width: 300px; 
-            z-index: 10000; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            transform: translate(-50%, -50%);
+            background: #111;
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid white;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 10px;
         }
-
-        /* This class is toggled by JavaScript */
-        #loginPopup.active {
-            display: flex !important;
-        }
-
-        #loginPopup input { 
-            padding: 14px; border-radius: 15px; border: 1px solid #333; 
-            background: #000; color: white; outline: none; font-size: 16px;
-        }
-
-        .del-btn {
-            color: #ff4444; background: none; border: none; 
-            margin-top: 15px; cursor: pointer; font-size: 12px; letter-spacing: 1px;
-        }
+        #loginPopup.open { display: flex; }
+        .entry-content { display: none; margin-top: 10px; color: #ccc; }
+        .expanded .entry-content { display: block; }
     </style>
 </head>
 <body>
 
-    <div class="title-header"><h1>iku's journal</h1></div>
-    
-    <div id="editorArea" style="display:none; margin-bottom: 60px; padding: 0 20px; position: relative; z-index: 100;">
-        <div style="max-width: 800px; margin: 0 auto;">
-            <textarea id="note" style="width:100%; height:200px; border-radius:24px; background:rgba(255,255,255,0.03); color:white; padding:25px; border:1px solid rgba(255,255,255,0.1); outline:none; font-size: 16px;" placeholder="Writing to the void..."></textarea>
-            <button id="saveBtn" class="icon-btn" style="margin-top:20px; width:100%;">POST ENTRY</button>
-        </div>
+    <div id="editorArea" style="display:none; padding: 20px; text-align: center;">
+        <textarea id="note" style="width: 80%; height: 100px;"></textarea><br>
+        <button id="saveBtn" class="icon-btn">POST</button>
     </div>
 
     <div id="entries"></div>
 
     <div id="bottomControls">
-        <a class="icon-btn" href="index.html">🏠 HOME</a>
+        <a class="icon-btn" href="index.html">HOME</a>
         <button id="showLoginBtn" class="lock-btn">🔒</button>
     </div>
 
     <div id="loginPopup">
-        <div style="text-align:center; font-size: 0.8rem; opacity: 0.5; margin-bottom: 5px;">ADMIN ACCESS</div>
-        <input type="email" id="emailInput" placeholder="Email" autocomplete="email">
-        <input type="password" id="passInput" placeholder="Password" autocomplete="current-password">
-        <button id="performLoginBtn" style="background:white; color:black; padding:14px; border-radius:15px; font-weight:bold; border:none; cursor:pointer; margin-top: 5px;">SIGN IN</button>
+        <input type="email" id="emailInput" placeholder="Email">
+        <input type="password" id="passInput" placeholder="Password">
+        <button id="performLoginBtn">LOGIN</button>
+        <button onclick="document.getElementById('loginPopup').classList.remove('open')">CLOSE</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = { 
@@ -97,43 +61,30 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
-        let isAdmin = false;
 
-        const loginPopup = document.getElementById('loginPopup');
-        const showLoginBtn = document.getElementById('showLoginBtn');
-
-        // --- 1. THE LOCK BUTTON FIX ---
-        showLoginBtn.onclick = (e) => {
-            e.stopPropagation(); 
-            loginPopup.classList.toggle('active'); // Simply toggle the active class
+        // LOCK BUTTON FUNCTION
+        const popup = document.getElementById('loginPopup');
+        document.getElementById('showLoginBtn').onclick = () => {
+            popup.classList.toggle('open');
         };
 
-        // Close when clicking outside the popup
-        document.addEventListener('click', (e) => {
-            if (!loginPopup.contains(e.target) && e.target !== showLoginBtn) {
-                loginPopup.classList.remove('active');
-            }
-        });
-
-        // --- 2. AUTHENTICATION LOGIC ---
+        // AUTH CHECK
         onAuthStateChanged(auth, (user) => {
-            isAdmin = !!user;
-            document.getElementById('editorArea').style.display = isAdmin ? 'block' : 'none';
-            showLoginBtn.innerHTML = isAdmin ? '🔓' : '🔒';
+            document.getElementById('editorArea').style.display = user ? 'block' : 'none';
+            document.getElementById('showLoginBtn').innerHTML = user ? '🔓' : '🔒';
         });
 
+        // LOGIN ACTION
         document.getElementById('performLoginBtn').onclick = async () => {
             const email = document.getElementById('emailInput').value;
             const pass = document.getElementById('passInput').value;
             try {
                 await signInWithEmailAndPassword(auth, email, pass);
-                loginPopup.classList.remove('active');
-            } catch (e) {
-                alert("Incorrect credentials.");
-            }
+                popup.classList.remove('open');
+            } catch (e) { alert("Fail"); }
         };
 
-        // --- 3. JOURNAL DATA LOGIC ---
+        // LOAD DATA
         onValue(ref(db, 'entries'), (snapshot) => {
             const list = document.getElementById('entries');
             list.innerHTML = '';
@@ -143,32 +94,17 @@
                     const entry = data[key];
                     const div = document.createElement('div');
                     div.className = 'journal-entry';
-                    div.innerHTML = `
-                        <div style="font-weight:bold; font-size:1.4rem;">${entry.text.split('\n')[0]}</div>
-                        <div style="opacity:0.3; font-size:0.8rem;">${new Date(entry.date).toLocaleDateString()}</div>
-                        <div class="entry-content">${entry.text.split('\n').slice(1).join('\n')}</div>
-                        ${isAdmin ? '<button class="del-btn">[ DELETE ENTRY ]</button>' : ''}
-                    `;
-                    div.onclick = (e) => {
-                        if (e.target.className === 'del-btn') return;
-                        div.classList.toggle('expanded');
-                    };
-                    if (isAdmin) {
-                        div.querySelector('.del-btn').onclick = () => {
-                            if(confirm("Permanently delete this entry?")) remove(ref(db, `entries/${key}`));
-                        };
-                    }
+                    div.innerHTML = `<strong>${entry.text.split('\n')[0]}</strong><div class="entry-content">${entry.text}</div>`;
+                    div.onclick = () => div.classList.toggle('expanded');
                     list.appendChild(div);
                 });
             }
         });
 
+        // SAVE DATA
         document.getElementById('saveBtn').onclick = () => {
-            const ta = document.getElementById('note');
-            if (ta.value.trim()) {
-                push(ref(db, 'entries'), { date: new Date().toISOString(), text: ta.value });
-                ta.value = '';
-            }
+            const val = document.getElementById('note').value;
+            if(val) push(ref(db, 'entries'), { text: val, date: new Date().toISOString() });
         };
     </script>
 </body>
